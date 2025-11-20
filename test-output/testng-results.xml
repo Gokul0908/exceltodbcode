@@ -1,9 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results ignored="0" total="0" passed="0" failed="0" skipped="0">
+<testng-results ignored="0" total="1" passed="0" failed="1" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-11-20T16:54:33 IST" name="ChainingSuite" finished-at="2025-11-20T16:54:33 IST" duration-ms="0">
+  <suite started-at="2025-11-20T17:55:12 IST" name="ChainingSuite" finished-at="2025-11-20T17:55:14 IST" duration-ms="1954">
     <groups>
     </groups>
+    <test started-at="2025-11-20T17:55:12 IST" name="Chaining_TC001" finished-at="2025-11-20T17:55:14 IST" duration-ms="1954">
+      <class name="com.ep.app.tests.ChainingTest">
+        <test-method signature="testChainingRequest(java.lang.String)[pri:0, instance:com.ep.app.tests.ChainingTest@40df6090]" started-at="2025-11-20T17:55:12 IST" name="testChainingRequest" finished-at="2025-11-20T17:55:14 IST" duration-ms="1953" status="FAIL">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[TC001]]>
+              </value>
+            </param>
+          </params>
+          <exception class="java.lang.AssertionError">
+            <message>
+              <![CDATA[Expected one of [200, 201] but got 422]]>
+            </message>
+            <full-stacktrace>
+              <![CDATA[java.lang.AssertionError: Expected one of [200, 201] but got 422
+at org.testng.Assert.fail(Assert.java:110)
+at com.ep.app.tests.Common.verifyResponseCode(Common.java:250)
+at com.ep.app.tests.Common.executeChainedSteps(Common.java:652)
+at com.ep.app.tests.ChainingTest.testChainingRequest(ChainingTest.java:26)
+at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+at org.testng.internal.invokers.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:139)
+at org.testng.internal.invokers.TestInvoker.invokeMethod(TestInvoker.java:677)
+at org.testng.internal.invokers.TestInvoker.invokeTestMethod(TestInvoker.java:221)
+at org.testng.internal.invokers.MethodRunner.runInSequence(MethodRunner.java:50)
+at org.testng.internal.invokers.TestInvoker$MethodInvocationAgent.invoke(TestInvoker.java:969)
+at org.testng.internal.invokers.TestInvoker.invokeTestMethods(TestInvoker.java:194)
+at org.testng.internal.invokers.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:148)
+at org.testng.internal.invokers.TestMethodWorker.run(TestMethodWorker.java:128)
+at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+at org.testng.TestRunner.privateRun(TestRunner.java:829)
+at org.testng.TestRunner.run(TestRunner.java:602)
+at org.testng.SuiteRunner.runTest(SuiteRunner.java:437)
+at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:431)
+at org.testng.SuiteRunner.privateRun(SuiteRunner.java:391)
+at org.testng.SuiteRunner.run(SuiteRunner.java:330)
+at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:95)
+at org.testng.TestNG.runSuitesSequentially(TestNG.java:1256)
+at org.testng.TestNG.runSuitesLocally(TestNG.java:1176)
+at org.testng.TestNG.runSuites(TestNG.java:1099)
+at org.testng.TestNG.run(TestNG.java:1067)
+at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:36)
+at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:30)
+]]>
+            </full-stacktrace>
+          </exception> <!-- java.lang.AssertionError -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testChainingRequest -->
+      </class> <!-- com.ep.app.tests.ChainingTest -->
+    </test> <!-- Chaining_TC001 -->
   </suite> <!-- ChainingSuite -->
 </testng-results>
