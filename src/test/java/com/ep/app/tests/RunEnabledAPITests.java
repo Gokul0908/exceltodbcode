@@ -1,4 +1,4 @@
-package com.ep.app.tests;  // New Code
+package com.ep.app.tests;
 
 import java.util.List;
 
@@ -11,6 +11,11 @@ public class RunEnabledAPITests {
 
 		String fileName = ConfigReader.getConfigValue("excelFile");
 		String excelPath = Common.getExcelFilePath(fileName);
+		
+		
+		System.out.println("Excel path");
+		
+		
 
 		// 1. Get caseIDs for individual API operations
 		List<String> getCases = Common.getAllTestCaseIDs(excelPath, "apiGET", "caseID", "isRun");
