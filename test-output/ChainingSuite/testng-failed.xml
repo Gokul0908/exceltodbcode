@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [ChainingSuite]">
+  <listeners>
+    <listener class-name="com.ep.app.utils.TestListener"/>
+  </listeners>
+  <test thread-count="5" name="Chaining_TC001(failed)">
+    <parameter name="chainCaseID" value="TC001"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest">
+        <methods>
+          <include name="testChainingRequest" invocation-numbers="0"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.ChainingTest -->
+    </classes>
+  </test> <!-- Chaining_TC001(failed) -->
+</suite> <!-- Failed suite [ChainingSuite] -->

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="ChainingSuite" parallel="false">
+  <listeners>
+    <listener class-name="com.ep.app.utils.TestListener"/>
+  </listeners>
+</suite>
