@@ -1,4 +1,4 @@
-package com.ep.app.tests; //check
+package com.ep.app.tests;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -54,18 +54,11 @@ public class Common {
 
 	private final DataContext dataContext;
 	private static ExcelActions excelActions;
-
-	static {
-		if (excelActions == null) {
-			excelActions = new ExcelActions();
-		}
-	}
-
 	private final APIActions apiActions;
 
 	public Common(DataContext dataContext, ExcelActions excelActions, APIActions apiActions) {
 		this.dataContext = dataContext;
-		Common.excelActions = excelActions;
+		this.excelActions = excelActions;
 		this.apiActions = apiActions;
 	}
 
@@ -106,6 +99,7 @@ public class Common {
 		apiActions.setContentTypeInRequestHeader(request, "application/json");
 		dataContext.setRequest(request);
 		request.log().all();
+
 	}
 
 	public void setPathParam(String caseID, String sheet) {
@@ -137,6 +131,7 @@ public class Common {
 		String authType = data.get("authType");
 
 		if (isNullOrEmpty(authType) || authType.equalsIgnoreCase("NA")) {
+			// No auth required
 			System.out.println("No authentication applied for caseID: " + caseID);
 		} else if (authType.equalsIgnoreCase("Bearer")) {
 			if (!isNullOrEmpty(token)) {
@@ -156,7 +151,8 @@ public class Common {
 				if (creds.length == 2) {
 					apiActions.setBasicAuthInRequestHeader(request, creds[0], creds[1]);
 				} else {
-					throw new RuntimeException("Invalid baseauth format in caseID: " + caseID);
+					throw new RuntimeException(
+							"Invalid baseauth format (expected username:password) in caseID: " + caseID);
 				}
 			} else {
 				throw new RuntimeException("Missing baseauth for Basic auth in caseID: " + caseID);
@@ -169,22 +165,13 @@ public class Common {
 		dataContext.setRequest(request);
 	}
 
-	// 🔥🔥 PAYLOAD FIX — Auto-generate UNIQUE email
 	public void preparePayload(String caseID, String sheet) {
 		Map<String, String> data = getTestData(caseID, sheet);
 
 		String payload = data.get("payLoad");
-
-		if (payload.contains("\"email\"")) {
-			String uniqueEmail = "api_" + System.currentTimeMillis() + "@gmail.com";
-			payload = payload.replaceAll("\"email\"\\s*:\\s*\"[^\"]+\"", "\"email\": \"" + uniqueEmail + "\"");
-			System.out.println("Generated Email: " + uniqueEmail);
-		}
-
 		if (isNullOrEmpty(payload)) {
 			throw new RuntimeException("No 'payLoad' found in Excel for caseID: " + caseID);
 		}
-
 		dataContext.setJsonBody(payload);
 	}
 
@@ -193,13 +180,13 @@ public class Common {
 		Map<String, String> data = getTestData(caseID, sheet);
 
 		String endpoint = data.get("endPoint");
-		String Request = data.get("action");
+		String Request = data.get("action"); // ✅ Use "action" as the column name
 
 		if (isNullOrEmpty(endpoint)) {
 			throw new IllegalArgumentException("Endpoint is missing for caseID: " + caseID);
 		}
 		if (isNullOrEmpty(method)) {
-			throw new IllegalArgumentException("HTTP method is missing for caseID: " + caseID);
+			throw new IllegalArgumentException("HTTP method (action) is missing in Excel for caseID: " + caseID);
 		}
 
 		RequestSpecification request = dataContext.getRequest();
@@ -232,6 +219,7 @@ public class Common {
 
 		dataContext.setResponse(response);
 
+		// Extent report logging (optional, if integrated)
 		ITestResult result = Reporter.getCurrentTestResult();
 		ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
 
@@ -255,6 +243,7 @@ public class Common {
 			}
 		}
 		Assert.fail("Expected one of " + Arrays.toString(expectedCodes) + " but got " + actualCode);
+
 	}
 
 	public void validateResponseParams(String caseID, String sheet) {
@@ -286,7 +275,7 @@ public class Common {
 			String actual = actualObj != null ? actualObj.toString().trim() : "null";
 
 			Assert.assertEquals(actual, expected,
-					String.format("Mismatch for [%s]: expected=%s, actual=%s", param, expected, actual));
+					String.format("Mismatch for parameter [%s]: expected = %s, actual = %s", param, expected, actual));
 
 			System.out.println("Verified: " + param + " = " + expected);
 		}
@@ -301,6 +290,7 @@ public class Common {
 		apiActions.validateResponseWithJSONSchemaFile(response, schemaFilePath);
 	}
 
+//save api response
 	public void saveApiResponse(String fileName, String sheetName, String testCaseId, int headerRowIndex) {
 		String excelPath = getExcelFilePath(fileName);
 		List<String> sheetNames = List.of(sheetName);
@@ -391,6 +381,7 @@ public class Common {
 					"Response is null. Ensure POST request was successful before updating Excel.");
 		}
 
+		// Try to get the ID from different possible JSON paths
 		String postId = null;
 		if (response.jsonPath().get("data.id") != null) {
 			postId = response.jsonPath().getString("data.id");
@@ -399,25 +390,53 @@ public class Common {
 		}
 
 		if (postId == null || postId.isEmpty()) {
-			throw new IllegalStateException("Post ID missing from response.");
+			throw new IllegalStateException("Post ID is missing from the response.");
 		}
 
 		String excelPath = System.getProperty("user.dir") + "/src/test/resources/testData/APIData.xlsx";
 		List<List<String>> rows = excelActions.extractExcelDataAsList(excelPath, sheetName, 0, 0, "dd-MM-yyyy");
 
 		int caseIDColumnIndex = rows.get(headerRowIndex).indexOf("caseID");
+		int queryParamValueIndex = rows.get(headerRowIndex).indexOf("queryParamValue");
+
+		if (caseIDColumnIndex == -1 || queryParamValueIndex == -1) {
+			throw new RuntimeException("Required columns not found in sheet: " + sheetName);
+		}
 
 		List<String> sheetNames = Collections.singletonList(sheetName);
-
 		for (int i = currentRowIndex + 1; i < rows.size(); i++) {
 			List<String> row = rows.get(i);
 			if (row.size() > caseIDColumnIndex && row.get(caseIDColumnIndex).trim().equalsIgnoreCase(currentCaseID)) {
 				excelActions.setValueInSpecificCell(excelPath, sheetNames, "queryParamValue", headerRowIndex, i,
 						postId);
-				System.out.println("Updated queryParamValue in row " + i + " for caseID: " + currentCaseID);
+				System.out.println("Updated queryParamValue to row " + i + " for caseID: " + currentCaseID);
 			}
 		}
+
+//	    List<String> sheetNames2 = Collections.singletonList(sheetName);
+//
+//	    for (int i = currentRowIndex + 1; i < rows.size(); i++) {
+//	        List<String> row = rows.get(i);
+//
+//	        // ✅ Extra safety: check row has enough columns
+//	        if (row.size() > caseIDColumnIndex) {
+//	            String caseIDFromExcel = row.get(caseIDColumnIndex).trim();
+//
+//	            // ✅ Update if the row has SAME caseID as current OR {id} placeholder in endpoint
+//	            if (caseIDFromExcel.equalsIgnoreCase(currentCaseID)) {
+//	                excelActions.setValueInSpecificCell(
+//	                        excelPath, sheetNames2, "queryParamValue", headerRowIndex, i, postId
+//	                );
+//	                System.out.println("Updated queryParamValue in row " + i +
+//	                                   " for caseID: " + currentCaseID +
+//	                                   " with POST ID = " + postId);
+//	            }
+//	        }
+//	    }
+
 	}
+
+	// additional excel action
 
 	public static String getExcelFilePath(String fileName) {
 		String basePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
@@ -432,6 +451,7 @@ public class Common {
 		return fullPath;
 	}
 
+	// Get all TestCaseIDs from a specific column
 	public static List<String> getAllTestCaseIDs(String filePath, String sheetName, String testCaseIdHeaderName,
 			String runFlagHeaderName) {
 
@@ -472,6 +492,7 @@ public class Common {
 		return testCaseIds;
 	}
 
+	// method to get column index based on header name
 	public static int getColumnIndex(Row headerRow, String headerName) {
 		for (Cell cell : headerRow) {
 			if (cell.getStringCellValue().trim().equalsIgnoreCase(headerName.trim())) {
@@ -481,6 +502,7 @@ public class Common {
 		return -1;
 	}
 
+	// method to convert cell value to string
 	public static String getCellValueAsString(Cell cell) {
 		DataFormatter formatter = new DataFormatter();
 		return formatter.formatCellValue(cell);
@@ -495,10 +517,11 @@ public class Common {
 			writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 			writer.write("<suite name=\"DynamicSuite\">\n");
 
+			// If any case exists, include the APIMethods class
 			if (!getCases.isEmpty() || !postCases.isEmpty() || !putCases.isEmpty() || !deleteCases.isEmpty()) {
 				writer.write("  <test name=\"APIMethodsTest\">\n");
 				writer.write("    <classes>\n");
-				writer.write("      <class name=\"com.ep.app.tests.APIMethods\"/>\n");
+				writer.write("      <class name=\"com.ep.app.tests.APIMethods\"/>\n"); // Your single test class
 				writer.write("    </classes>\n");
 				writer.write("  </test>\n");
 			}
@@ -518,10 +541,12 @@ public class Common {
 			writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 			writer.write("<suite name=\"DynamicSuite\" parallel=\"false\">\n");
 
+// Add listener block
 			writer.write("  <listeners>\n");
 			writer.write("    <listener class-name=\"com.ep.app.utils.TestListener\"/>\n");
 			writer.write("  </listeners>\n");
 
+// Generate <test> blocks per case
 			writeTestBlocks(writer, "testGETRequest", getCases);
 			writeTestBlocks(writer, "testPOSTRequest", postCases);
 			writeTestBlocks(writer, "testPUTRequest", putCases);
@@ -556,6 +581,7 @@ public class Common {
 			writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 			writer.write("<suite name=\"ChainingSuite\" parallel=\"false\">\n");
 
+			// Add listener block
 			writer.write("  <listeners>\n");
 			writer.write("    <listener class-name=\"com.ep.app.utils.TestListener\"/>\n");
 			writer.write("  </listeners>\n");
@@ -612,7 +638,7 @@ public class Common {
 			case "GET" -> verifyResponseCode("200");
 			case "POST" -> {
 				verifyResponseCode("200", "201");
-				updatePostIdInQueryParamForNextMatchingCaseID(sheetName, stepCaseID, i + 1, headerRowIndex);
+				updatePostIdInQueryParamForNextMatchingCaseID(sheetName, stepCaseID, i + 1, headerRowIndex); // fix here
 			}
 			case "PUT" -> verifyResponseCode("200");
 			case "DELETE" -> verifyResponseCode("204");
@@ -669,39 +695,15 @@ public class Common {
 		newJson.add("meta", json.get("meta"));
 
 		if (dataElement.isJsonArray()) {
+			// Take the first element from array
 			JsonObject first = dataElement.getAsJsonArray().get(0).getAsJsonObject();
 			newJson.add("data", first);
 		} else {
+			// Keep single object as it is
 			newJson.add("data", dataElement.getAsJsonObject());
 		}
 
 		return newJson.toString();
-	}
-
-	public void setPathOrQueryParam(String caseID, String sheet) {
-
-		Map<String, String> data = getTestData(caseID, sheet);
-		RequestSpecification req = dataContext.getRequest();
-
-		String key = data.get("queryParam");
-		String value = data.get("queryParamValue");
-
-		if (isNullOrEmpty(key) || isNullOrEmpty(value)) {
-			return;
-		}
-
-		String endpoint = data.get("endPoint");
-
-		// If endpoint contains {...} → USE PATH PARAM
-		if (endpoint != null && endpoint.contains("{")) {
-			req = apiActions.setSinglePathParameter(req, key, value);
-		}
-		// Else use query param
-		else {
-			req = apiActions.setSingleQueryParameter(req, key, value);
-		}
-
-		dataContext.setRequest(req);
 	}
 
 }

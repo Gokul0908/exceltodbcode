@@ -9,17 +9,17 @@
 <table>
 <tr><th>Test</th><th># Passed</th><th># Skipped</th><th># Retried</th><th># Failed</th><th>Time (ms)</th><th>Included Groups</th><th>Excluded Groups</th></tr>
 <tr><th colspan="8">ChainingSuite</th></tr>
-<tr><td><a href="#t0">Chaining_TC001</a></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num attn">1</td><td class="num">7,076</td><td></td><td></td></tr>
+<tr><td><a href="#t0">Chaining_TC001</a></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num attn">1</td><td class="num">1,502</td><td></td><td></td></tr>
 </table>
-<table id='summary'><thead><tr><th>Class</th><th>Method</th><th>Start</th><th>Time (ms)</th></tr></thead><tbody><tr><th colspan="4">ChainingSuite</th></tr></tbody><tbody id="t0"><tr><th colspan="4">Chaining_TC001 &#8212; failed</th></tr><tr class="failedeven"><td rowspan="1">com.ep.app.tests.ChainingTest</td><td><a href="#m0">testChainingRequest</a></td><td rowspan="1">1763730521196</td><td rowspan="1">6658</td></tr></tbody>
+<table id='summary'><thead><tr><th>Class</th><th>Method</th><th>Start</th><th>Time (ms)</th></tr></thead><tbody><tr><th colspan="4">ChainingSuite</th></tr></tbody><tbody id="t0"><tr><th colspan="4">Chaining_TC001 &#8212; failed</th></tr><tr class="failedeven"><td rowspan="1">com.ep.app.tests.ChainingTest</td><td><a href="#m0">testChainingRequest</a></td><td rowspan="1">1763962653052</td><td rowspan="1">1501</td></tr></tbody>
 </table>
-<h2>Chaining_TC001</h2><h3 id="m0">com.ep.app.tests.ChainingTest#testChainingRequest</h3><table class="result"><tr class="param"><th>Parameter #1</th></tr><tr class="param stripe"><td>TC001</td></tr><tr><th>Exception</th></tr><tr><td><div class="stacktrace">java.lang.AssertionError: Mismatch for [name]: expected=api67, actual=api0908 expected [api67] but found [api0908]
-	at com.ep.app.tests.Common.validateResponseParams(Common.java:289)
-	at com.ep.app.tests.Common.executeChainedSteps(Common.java:642)
+<h2>Chaining_TC001</h2><h3 id="m0">com.ep.app.tests.ChainingTest#testChainingRequest</h3><table class="result"><tr class="param"><th>Parameter #1</th></tr><tr class="param stripe"><td>TC001</td></tr><tr><th>Exception</th></tr><tr><td><div class="stacktrace">java.lang.IllegalStateException: Post ID is missing from the response.
+	at com.ep.app.tests.Common.updatePostIdInQueryParamForNextMatchingCaseID(Common.java:393)
+	at com.ep.app.tests.Common.executeChainedSteps(Common.java:641)
 	at com.ep.app.tests.ChainingTest.testChainingRequest(ChainingTest.java:26)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:37)
-	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:31)
-... Removed 27 stack frames</div></td></tr></table><p class="totop"><a href="#summary">back to summary</a></p>
+	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:36)
+	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:30)
+... Removed 22 stack frames</div></td></tr></table><p class="totop"><a href="#summary">back to summary</a></p>
 </body>
 </html>
