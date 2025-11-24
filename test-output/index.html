@@ -130,14 +130,14 @@
                   </a> <!-- testChainingRequest(TC001) -->
                   <span class="method-name">testChainingRequest</span>
                   <span class="parameters">(TC001)</span>
-                  <div class="stack-trace">java.lang.AssertionError: Expected one of [200, 201] but got 422
-	at com.ep.app.tests.Common.verifyResponseCode(Common.java:250)
-	at com.ep.app.tests.Common.executeChainedSteps(Common.java:652)
+                  <div class="stack-trace">java.lang.AssertionError: Mismatch for [name]: expected=api67, actual=api0908 expected [api67] but found [api0908]
+	at com.ep.app.tests.Common.validateResponseParams(Common.java:289)
+	at com.ep.app.tests.Common.executeChainedSteps(Common.java:642)
 	at com.ep.app.tests.ChainingTest.testChainingRequest(ChainingTest.java:26)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:36)
-	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:30)
-... Removed 23 stack frames
+	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:37)
+	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:31)
+... Removed 27 stack frames
 </div> <!-- stack-trace -->
                 </div> <!-- method-content -->
               </div> <!-- method -->
@@ -203,12 +203,12 @@ data.addRows(1);
 data.setCell(0, 0, 0)
 data.setCell(0, 1, 'testChainingRequest')
 data.setCell(0, 2, 'com.ep.app.tests.ChainingTest')
-data.setCell(0, 3, 1953);
+data.setCell(0, 3, 6658);
 window.suiteTableData['ChainingSuite']= { tableData: data, tableDiv: 'times-div-ChainingSuite'}
 return data;
 }
               </script>
-              <span class="suite-total-time">Total running time: 1 seconds</span>
+              <span class="suite-total-time">Total running time: 6 seconds</span>
               <div id="times-div-ChainingSuite">
               </div> <!-- times-div-ChainingSuite -->
             </div> <!-- times-div -->

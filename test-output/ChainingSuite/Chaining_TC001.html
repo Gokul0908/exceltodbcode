@@ -57,9 +57,9 @@ function toggleAllBoxes() {
 <tr>
 <td>Tests passed/Failed/Skipped:</td><td>0/1/0</td>
 </tr><tr>
-<td>Started on:</td><td>Thu Nov 20 17:55:12 IST 2025</td>
+<td>Started on:</td><td>Fri Nov 21 18:38:40 IST 2025</td>
 </tr>
-<tr><td>Total time:</td><td>1 seconds (1954 ms)</td>
+<tr><td>Total time:</td><td>7 seconds (7076 ms)</td>
 </tr><tr>
 <td>Included groups:</td><td></td>
 </tr><tr>
@@ -77,18 +77,22 @@ function toggleAllBoxes() {
 </tr>
 <tr>
 <td title='com.ep.app.tests.ChainingTest.testChainingRequest()'><b>testChainingRequest</b><br>Test class: com.ep.app.tests.ChainingTest<br>Parameters: TC001</td>
-<td><div><pre>java.lang.AssertionError: Expected one of [200, 201] but got 422
-	at com.ep.app.tests.Common.verifyResponseCode(Common.java:250)
-	at com.ep.app.tests.Common.executeChainedSteps(Common.java:652)
+<td><div><pre>java.lang.AssertionError: Mismatch for [name]: expected=api67, actual=api0908 expected [api67] but found [api0908]
+	at com.ep.app.tests.Common.validateResponseParams(Common.java:289)
+	at com.ep.app.tests.Common.executeChainedSteps(Common.java:642)
 	at com.ep.app.tests.ChainingTest.testChainingRequest(ChainingTest.java:26)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:36)
-	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:30)
-... Removed 23 stack frames</pre></div><a href='#' onClick='toggleBox("stack-trace1646410010", this, "Click to show all stack frames", "Click to hide stack frames")'>Click to show all stack frames</a>
-<div class='stack-trace' id='stack-trace1646410010'><pre>java.lang.AssertionError: Expected one of [200, 201] but got 422
+	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:37)
+	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:31)
+... Removed 27 stack frames</pre></div><a href='#' onClick='toggleBox("stack-trace605649683", this, "Click to show all stack frames", "Click to hide stack frames")'>Click to show all stack frames</a>
+<div class='stack-trace' id='stack-trace605649683'><pre>java.lang.AssertionError: Mismatch for [name]: expected=api67, actual=api0908 expected [api67] but found [api0908]
 	at org.testng.Assert.fail(Assert.java:110)
-	at com.ep.app.tests.Common.verifyResponseCode(Common.java:250)
-	at com.ep.app.tests.Common.executeChainedSteps(Common.java:652)
+	at org.testng.Assert.failNotEquals(Assert.java:1577)
+	at org.testng.Assert.assertEqualsImpl(Assert.java:149)
+	at org.testng.Assert.assertEquals(Assert.java:131)
+	at org.testng.Assert.assertEquals(Assert.java:655)
+	at com.ep.app.tests.Common.validateResponseParams(Common.java:289)
+	at com.ep.app.tests.Common.executeChainedSteps(Common.java:642)
 	at com.ep.app.tests.ChainingTest.testChainingRequest(ChainingTest.java:26)
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
@@ -113,11 +117,11 @@ function toggleAllBoxes() {
 	at org.testng.TestNG.runSuitesLocally(TestNG.java:1176)
 	at org.testng.TestNG.runSuites(TestNG.java:1099)
 	at org.testng.TestNG.run(TestNG.java:1067)
-	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:36)
-	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:30)
+	at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:37)
+	at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:31)
 </pre></div></td>
-<td>1</td>
-<td>com.ep.app.tests.ChainingTest@40df6090</td></tr>
+<td>6</td>
+<td>com.ep.app.tests.ChainingTest@7ca33c24</td></tr>
 </table><p>
 </body>
 </html>

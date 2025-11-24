@@ -2,12 +2,12 @@
 <testng-results ignored="0" total="1" passed="0" failed="1" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-11-20T17:55:12 IST" name="ChainingSuite" finished-at="2025-11-20T17:55:14 IST" duration-ms="1954">
+  <suite started-at="2025-11-21T18:38:40 IST" name="ChainingSuite" finished-at="2025-11-21T18:38:47 IST" duration-ms="7076">
     <groups>
     </groups>
-    <test started-at="2025-11-20T17:55:12 IST" name="Chaining_TC001" finished-at="2025-11-20T17:55:14 IST" duration-ms="1954">
+    <test started-at="2025-11-21T18:38:40 IST" name="Chaining_TC001" finished-at="2025-11-21T18:38:47 IST" duration-ms="7076">
       <class name="com.ep.app.tests.ChainingTest">
-        <test-method signature="testChainingRequest(java.lang.String)[pri:0, instance:com.ep.app.tests.ChainingTest@40df6090]" started-at="2025-11-20T17:55:12 IST" name="testChainingRequest" finished-at="2025-11-20T17:55:14 IST" duration-ms="1953" status="FAIL">
+        <test-method signature="testChainingRequest(java.lang.String)[pri:0, instance:com.ep.app.tests.ChainingTest@7ca33c24]" started-at="2025-11-21T18:38:41 IST" name="testChainingRequest" finished-at="2025-11-21T18:38:47 IST" duration-ms="6658" status="FAIL">
           <params>
             <param index="0">
               <value>
@@ -17,13 +17,17 @@
           </params>
           <exception class="java.lang.AssertionError">
             <message>
-              <![CDATA[Expected one of [200, 201] but got 422]]>
+              <![CDATA[Mismatch for [name]: expected=api67, actual=api0908 expected [api67] but found [api0908]]]>
             </message>
             <full-stacktrace>
-              <![CDATA[java.lang.AssertionError: Expected one of [200, 201] but got 422
+              <![CDATA[java.lang.AssertionError: Mismatch for [name]: expected=api67, actual=api0908 expected [api67] but found [api0908]
 at org.testng.Assert.fail(Assert.java:110)
-at com.ep.app.tests.Common.verifyResponseCode(Common.java:250)
-at com.ep.app.tests.Common.executeChainedSteps(Common.java:652)
+at org.testng.Assert.failNotEquals(Assert.java:1577)
+at org.testng.Assert.assertEqualsImpl(Assert.java:149)
+at org.testng.Assert.assertEquals(Assert.java:131)
+at org.testng.Assert.assertEquals(Assert.java:655)
+at com.ep.app.tests.Common.validateResponseParams(Common.java:289)
+at com.ep.app.tests.Common.executeChainedSteps(Common.java:642)
 at com.ep.app.tests.ChainingTest.testChainingRequest(ChainingTest.java:26)
 at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
 at java.base/java.lang.reflect.Method.invoke(Method.java:580)
@@ -48,8 +52,8 @@ at org.testng.TestNG.runSuitesSequentially(TestNG.java:1256)
 at org.testng.TestNG.runSuitesLocally(TestNG.java:1176)
 at org.testng.TestNG.runSuites(TestNG.java:1099)
 at org.testng.TestNG.run(TestNG.java:1067)
-at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:36)
-at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:30)
+at com.ep.app.tests.RunEnabledAPITests.runTestNGSuite(RunEnabledAPITests.java:37)
+at com.ep.app.tests.RunEnabledAPITests.main(RunEnabledAPITests.java:31)
 ]]>
             </full-stacktrace>
           </exception> <!-- java.lang.AssertionError -->

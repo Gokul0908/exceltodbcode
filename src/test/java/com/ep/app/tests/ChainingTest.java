@@ -10,19 +10,19 @@ import com.ep.app.utils.ConfigReader;
 
 public class ChainingTest {
 
-    private final Common common;
+	private final Common common;
 
-    public ChainingTest() {
-        DataContext dataContext = new DataContext();
-        ExcelActions excelActions = new ExcelActions();
-        APIActions apiActions = new APIActions();
-        this.common = new Common(dataContext, excelActions, apiActions);
-    }
+	public ChainingTest() {
+		DataContext dataContext = new DataContext();
+		ExcelActions excelActions = new ExcelActions();
+		APIActions apiActions = new APIActions();
+		this.common = new Common(dataContext, excelActions, apiActions);
+	}
 
-    @Test
-    @Parameters("chainCaseID")
-    public void testChainingRequest(String chainCaseID) {
-        String filePath = Common.getExcelFilePath(ConfigReader.getConfigValue("excelFile"));
-        common.executeChainedSteps(filePath, "chainingRequests", chainCaseID);
-    }
+	@Test
+	@Parameters("chainCaseID")
+	public void testChainingRequest(String chainCaseID) {
+		String filePath = Common.getExcelFilePath(ConfigReader.getConfigValue("excelFile"));
+		common.executeChainedSteps(filePath, "chainingRequests", chainCaseID);
+	}
 }
