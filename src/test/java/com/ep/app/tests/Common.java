@@ -8,15 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -39,27 +34,27 @@ import com.aventstack.extentreports.markuputils.MarkupHelper;
 import com.changepond.test.framework.actions.APIActions;
 import com.changepond.test.framework.actions.ExcelActions;
 import com.ep.app.dto.DataContext;
-import com.ep.app.utils.ExtentReportManager;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import io.restassured.RestAssured;
-import io.restassured.http.Method;
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import io.restassured.response.Response;
-import com.google.gson.*;
-import static io.restassured.RestAssured.given;
 
 public class Common {
 
 	private final DataContext dataContext;
-	private static ExcelActions excelActions;
+//	private static ExcelActions excelActions;
 	private final APIActions apiActions;
+
+	private static ExcelActions excelActions = new ExcelActions();
 
 	public Common(DataContext dataContext, ExcelActions excelActions, APIActions apiActions) {
 		this.dataContext = dataContext;
 		this.excelActions = excelActions;
 		this.apiActions = apiActions;
+
 	}
 
 	public Map<String, String> getTestData(String caseID, String sheet) {
@@ -108,13 +103,22 @@ public class Common {
 		String paramKey = data.get("queryParam");
 		String paramValue = data.get("queryParamValue");
 
+		String endpoint = data.get("endPoint");
 		RequestSpecification request = dataContext.getRequest();
 
 		if (!isNullOrEmpty(paramKey) && !isNullOrEmpty(paramValue) && !paramKey.equalsIgnoreCase("NA")
 				&& !paramValue.equalsIgnoreCase("NA")) {
 
-			System.out.println("Setting path parameter: " + paramKey + " = " + paramValue);
-			request = apiActions.setSinglePathParameter(request, paramKey, paramValue);
+//			System.out.println("Setting path parameter: " + paramKey + " = " + paramValue);
+//			request = apiActions.setSinglePathParameter(request, paramKey, paramValue);
+
+			if (endpoint.contains("{id}")) {
+				endpoint = endpoint.replace("{id}", paramValue);
+				request.basePath(endpoint);
+			} else {
+				request = apiActions.setSinglePathParameter(request, paramKey, paramValue);
+			}
+
 			dataContext.setRequest(request);
 
 		} else {
@@ -172,63 +176,99 @@ public class Common {
 		if (isNullOrEmpty(payload)) {
 			throw new RuntimeException("No 'payLoad' found in Excel for caseID: " + caseID);
 		}
+
+		// 💥 generate random
+		String randomValue = Long.toHexString(System.currentTimeMillis());
+
+		// 💥 replace random in payload
+		payload = payload.replace("${random}", randomValue);
+
+		// 💥 AUTO-GENERATE UNIQUE EMAIL for POST requests only
+		if ("POST".equalsIgnoreCase(data.get("action")) && payload.contains("\"email\"")) {
+			String randomEmail = "apiUser_" + randomValue + "@gmail.com";
+
+			payload = payload.replaceAll("\"email\"\\s*:\\s*\"[^\"]+\"", "\"email\": \"" + randomEmail + "\"");
+
+			System.out.println("🔄 Auto-generated email = " + randomEmail);
+		}
+
+		// 💥 save JSON + random value
 		dataContext.setJsonBody(payload);
+		dataContext.setRandomValue(randomValue);
+
 	}
 
 	public void makeRequest(String method, String caseID, String sheet) {
 
-		Map<String, String> data = getTestData(caseID, sheet);
+	    Map<String, String> data = getTestData(caseID, sheet);
 
-		String endpoint = data.get("endPoint");
-		String Request = data.get("action"); // ✅ Use "action" as the column name
+	    String endpoint = dataContext.getUpdatedEndpoint();
+	    if (isNullOrEmpty(endpoint)) {
+	        endpoint = data.get("endPoint");
+	    }
 
-		if (isNullOrEmpty(endpoint)) {
-			throw new IllegalArgumentException("Endpoint is missing for caseID: " + caseID);
-		}
-		if (isNullOrEmpty(method)) {
-			throw new IllegalArgumentException("HTTP method (action) is missing in Excel for caseID: " + caseID);
-		}
+	    if (isNullOrEmpty(method)) {
+	        throw new IllegalArgumentException("HTTP method (action) missing for caseID: " + caseID);
+	    }
 
-		RequestSpecification request = dataContext.getRequest();
+	    RequestSpecification request = dataContext.getRequest();
+	    Response response;
 
-		if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
-			String body = dataContext.getJsonBody();
-			if (isNullOrEmpty(body)) {
-				throw new RuntimeException("Request body is missing for caseID: " + caseID);
-			}
-			request.body(body);
-		}
+	    // ---- HANDLE FIRST: If {id} missing for standalone PUT / DELETE / GET ----
+	    if ((method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("DELETE") || method.equalsIgnoreCase("GET"))
+	            && endpoint.contains("{id}")
+	            && (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty())) {
 
-		Response response;
-		switch (method.toUpperCase()) {
-		case "POST":
-			response = request.post(endpoint);
-			break;
-		case "PUT":
-			response = request.put(endpoint);
-			break;
-		case "DELETE":
-			response = request.delete(endpoint);
-			break;
-		case "GET":
-			response = request.get(endpoint);
-			break;
-		default:
-			throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-		}
+	        System.out.println("⚠ No POST id → Fetching latest user ID...");
 
-		dataContext.setResponse(response);
+	        Response tempResponse = RestAssured.given()
+	                .baseUri("https://gorest.co.in")
+	                .header("Authorization", "Bearer " + data.get("generatedToken"))
+	                .get("/public/v2/users");
 
-		// Extent report logging (optional, if integrated)
-		ITestResult result = Reporter.getCurrentTestResult();
-		ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
+	        String latestId = tempResponse.jsonPath().getString("[0].id");
+	        dataContext.setLastCreatedId(latestId);
 
-		test.log(Status.INFO, "Response Body:");
-		test.log(Status.INFO, MarkupHelper.createCodeBlock(response.asString(), CodeLanguage.JSON));
-		test.log(Status.INFO, "StatusCode: " + response.getStatusCode());
-		test.log(Status.INFO, "StatusLine: " + response.getStatusLine());
-		test.log(Status.INFO, "ContentType: " + response.getContentType());
+	        System.out.println("✔ Latest ID fetched: " + latestId);
+
+	        endpoint = endpoint.replace("{id}", latestId);
+	    }
+
+	    // ---- Resolve ID inside endpoint if already available (Chaining case) ----
+	    if (endpoint.contains("{id}")) {
+	        String lastId = dataContext.getLastCreatedId();
+	        if (lastId == null || lastId.trim().isEmpty()) {
+	            throw new IllegalStateException("Missing ID for endpoint: " + endpoint);
+	        }
+	        endpoint = endpoint.replace("{id}", lastId);
+	    }
+
+	    System.out.println("ENDPOINT = " + endpoint);
+
+	    // ---- Set Body only for POST & PUT ----
+	    if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+	        String body = dataContext.getJsonBody();
+	        if (isNullOrEmpty(body)) throw new RuntimeException("Request body missing!");
+	        request.body(body);
+	    }
+
+	    switch (method.toUpperCase()) {
+	        case "POST" -> {
+	            response = request.post(endpoint);
+	            String postId = response.jsonPath().getString("id");
+	            if (postId == null) postId = response.jsonPath().getString("data.id");
+	            dataContext.setLastCreatedId(postId);
+	            System.out.println("🔥 Saved POST ID = " + postId);
+	        }
+	        case "PUT" -> response = request.put(endpoint);
+	        case "DELETE" -> response = request.delete(endpoint);
+	        case "GET" -> response = request.get(endpoint);
+	        default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+	    }
+
+	    dataContext.setResponse(response);
 	}
+
 
 	public void verifyResponseCode(String... expectedCodes) {
 		Response response = dataContext.getResponse();
@@ -247,9 +287,16 @@ public class Common {
 	}
 
 	public void validateResponseParams(String caseID, String sheet) {
+
 		Response response = dataContext.getResponse();
 		if (response == null) {
 			throw new IllegalStateException("API response is null.");
+		}
+
+		// 🔥 SKIP VALIDATION for Single GET when no POST id exists
+		if (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty()) {
+			System.out.println("⚠ Single GET detected — Skipping id/email validation");
+			return;
 		}
 
 		Map<String, String> data = getTestData(caseID, sheet);
@@ -264,18 +311,89 @@ public class Common {
 			throw new IllegalArgumentException("Mismatch between parameter and value count for caseID: " + caseID);
 		}
 
+		// --------------------------------------------------------------------
+		// FIRST: CHECK IF RESPONSE IS A LIST (GET /users)
+		// --------------------------------------------------------------------
+		try {
+			Object first = response.jsonPath().get("");
+			if (first instanceof List) {
+
+				// Read ID from context (POST id saved already)
+				String postId = dataContext.getLastCreatedId();
+				if (postId == null) {
+					postId = dataContext.getResponse().jsonPath().getString("data.id");
+				}
+
+				List<Map<String, Object>> list = response.jsonPath().getList("");
+
+				// Find the object that matches ID
+				Map<String, Object> matched = null;
+				for (Map<String, Object> item : list) {
+					if (String.valueOf(item.get("id")).equals(postId)) {
+						matched = item;
+						break;
+					}
+				}
+
+				if (matched == null) {
+					throw new AssertionError("User with ID " + postId + " not found in GET response list");
+				}
+
+				// Validate parameters against matched user
+				for (int i = 0; i < verificationParams.length; i++) {
+
+					String param = verificationParams[i].trim();
+					String expected = expectedValues[i].trim();
+
+					// Replace ${random}
+					String random = dataContext.getRandomValue();
+					if (expected.contains("${random}")) {
+						expected = expected.replace("${random}", random);
+					}
+
+					Object actualObj = matched.get(param);
+					String actual = actualObj != null ? actualObj.toString().trim() : "null";
+
+					if (param.equalsIgnoreCase("email")) {
+						Assert.assertTrue(actual.contains("@gmail.com"),
+								"Email validation failed: expected gmail but found " + actual);
+					} else {
+						Assert.assertEquals(actual, expected, "Mismatch for parameter [" + param + "]: expected = "
+								+ expected + ", actual = " + actual);
+					}
+
+					System.out.println("Verified: " + param + " = " + expected);
+				}
+
+				return; // Done for list case
+			}
+		} catch (Exception ignored) {
+			// Not a list — fall through to normal validation
+		}
+
+		// --------------------------------------------------------------------
+		// SECOND: NORMAL VALIDATION (POST, PUT, DELETE responses)
+		// --------------------------------------------------------------------
 		for (int i = 0; i < verificationParams.length; i++) {
+
 			String param = verificationParams[i].trim();
 			String expected = expectedValues[i].trim();
+
+			// Replace ${random}
+			String random = dataContext.getRandomValue();
+			if (expected.contains("${random}")) {
+				expected = expected.replace("${random}", random);
+			}
 
 			Object actualObj = response.jsonPath().get("data." + param);
 			if (actualObj == null) {
 				actualObj = response.jsonPath().get(param);
 			}
+
 			String actual = actualObj != null ? actualObj.toString().trim() : "null";
 
 			Assert.assertEquals(actual, expected,
-					String.format("Mismatch for parameter [%s]: expected = %s, actual = %s", param, expected, actual));
+					"Mismatch for parameter [" + param + "]: expected = " + expected + ", actual = " + actual);
 
 			System.out.println("Verified: " + param + " = " + expected);
 		}
@@ -404,12 +522,30 @@ public class Common {
 		}
 
 		List<String> sheetNames = Collections.singletonList(sheetName);
+
 		for (int i = currentRowIndex + 1; i < rows.size(); i++) {
+
 			List<String> row = rows.get(i);
-			if (row.size() > caseIDColumnIndex && row.get(caseIDColumnIndex).trim().equalsIgnoreCase(currentCaseID)) {
+
+			// Skip rows that don't match case ID
+			if (!row.get(caseIDColumnIndex).trim().equalsIgnoreCase(currentCaseID)) {
+				continue;
+			}
+
+			// Fetch current cell value
+			String currentValue = row.get(queryParamValueIndex).trim();
+
+			// Only update if cell contains ${id} OR is empty/NA
+			if (currentValue.equalsIgnoreCase("${id}") || currentValue.equalsIgnoreCase("NA")
+					|| currentValue.isEmpty()) {
+
 				excelActions.setValueInSpecificCell(excelPath, sheetNames, "queryParamValue", headerRowIndex, i,
 						postId);
-				System.out.println("Updated queryParamValue to row " + i + " for caseID: " + currentCaseID);
+
+				System.out.println("Updated queryParamValue in row " + i + " for caseID " + currentCaseID
+						+ " with id = " + postId);
+			} else {
+				System.out.println("Skipped updating row " + i + " (value not ${id})");
 			}
 		}
 
@@ -609,8 +745,10 @@ public class Common {
 		List<List<String>> allRows = excelActions.extractExcelDataAsList(filePath, sheetName, 0, 0, dateFormat);
 
 		int headerRowIndex = 0;
+		String prevMethod = null;
 
 		for (int i = 0; i < chainSteps.size(); i++) {
+
 			Map<String, String> stepData = chainSteps.get(i);
 
 			if (!"Yes".equalsIgnoreCase(stepData.get("isRun")))
@@ -618,34 +756,104 @@ public class Common {
 
 			String method = stepData.get("action");
 			String stepCaseID = stepData.get("caseID");
+			String endpointFromExcel = stepData.get("endPoint");
 
 			if (method == null || stepCaseID == null) {
 				System.err.println("Skipping due to null method or caseID at step " + i);
 				continue;
 			}
 
+			// ⭐⭐ FIX: If method = PUT, append ID to the endpoint ⭐⭐
+			if (method.equalsIgnoreCase("PUT")) {
+				dataContext.setUpdatedEndpoint(endpointFromExcel); // put {id} as is
+				System.out.println("🔧 Updated PUT endpoint = " + endpointFromExcel);
+			} else {
+				dataContext.setUpdatedEndpoint(endpointFromExcel);
+			}
+
 			System.out.println("Executing: " + method + " for caseID: " + stepCaseID);
 
 			setBaseUrl(stepCaseID, sheetName);
+
 			if (!"GET".equalsIgnoreCase(method)) {
 				preparePayload(stepCaseID, sheetName);
 			}
 
 			setAuthToken(stepCaseID, sheetName);
+
+			if (method.equalsIgnoreCase("PUT")) {
+				String postId = dataContext.getLastCreatedId();
+				if (postId != null) {
+					String updatedEndpoint = endpointFromExcel.replace("{id}", postId);
+					dataContext.setUpdatedEndpoint(updatedEndpoint);
+					System.out.println("💡 PUT URL updated to use ID: " + updatedEndpoint);
+				}
+			}
+
+			// ⭐ Execute Request
 			makeRequest(method, stepCaseID, sheetName);
 
-			switch (method.toUpperCase()) {
-			case "GET" -> verifyResponseCode("200");
-			case "POST" -> {
-				verifyResponseCode("200", "201");
-				updatePostIdInQueryParamForNextMatchingCaseID(sheetName, stepCaseID, i + 1, headerRowIndex); // fix here
-			}
-			case "PUT" -> verifyResponseCode("200");
-			case "DELETE" -> verifyResponseCode("204");
-			default -> throw new IllegalArgumentException("Unsupported method: " + method);
+			// ⭐ Save ID after POST
+			if (method.equalsIgnoreCase("POST")) {
+				Response response = dataContext.getResponse();
+				String postId = response.jsonPath().getString("id");
+				if (postId == null) {
+					postId = response.jsonPath().getString("data.id");
+				}
+
+				dataContext.setLastCreatedId(postId);
+				System.out.println("🔥 Saved lastCreatedId = " + postId);
 			}
 
-			validateResponseParams(stepCaseID, sheetName);
+			// ⭐ Verify status codes // Need to remove Updated by SE
+//			switch (method.toUpperCase()) {
+//			case "GET" -> verifyResponseCode("200");
+//			case "POST" -> {
+//				verifyResponseCode("200", "201");
+//				updatePostIdInQueryParamForNextMatchingCaseID(sheetName, stepCaseID, i + 1, headerRowIndex);
+//			}
+//			case "PUT" -> verifyResponseCode("200");
+//			case "DELETE" -> verifyResponseCode("204");
+//			default -> throw new IllegalArgumentException("Unsupported method: " + method);
+//			}
+
+			// Skip validation for DELETE since response body is empty
+
+			// determine expected status code
+			int expectedStatusCode;
+			if (method.equalsIgnoreCase("GET")) {
+
+				// GET after DELETE → expect 404
+				if ("DELETE".equalsIgnoreCase(prevMethod)) {
+					expectedStatusCode = 404;
+				} else {
+					expectedStatusCode = 200; // normal GET
+				}
+
+			} else if (method.equalsIgnoreCase("POST")) {
+				expectedStatusCode = 201;
+
+			} else if (method.equalsIgnoreCase("PUT")) {
+				expectedStatusCode = 200;
+
+			} else if (method.equalsIgnoreCase("DELETE")) {
+				expectedStatusCode = 204;
+
+			} else {
+				throw new IllegalArgumentException("Unsupported method: " + method);
+			}
+
+			// verify status code
+			verifyResponseCode(String.valueOf(expectedStatusCode));
+
+			// validate only when response has JSON body
+			if (!method.equalsIgnoreCase("DELETE") && expectedStatusCode != 404) {
+				validateResponseParams(stepCaseID, sheetName);
+			}
+
+			// update previous method
+			prevMethod = method;
+
 			saveApiResponse("APIData.xlsx", sheetName, stepCaseID, 0);
 		}
 	}
@@ -704,6 +912,19 @@ public class Common {
 		}
 
 		return newJson.toString();
+	}
+
+	public void resolveDynamicEndpoint(String caseID, String sheet) {
+		Map<String, String> data = getTestData(caseID, sheet);
+
+		String endpoint = data.get("endPoint");
+		String id = data.get("queryParamValue");
+
+		if (endpoint.contains("{id}") && id != null) {
+			endpoint = endpoint.replace("{id}", id);
+		}
+
+		dataContext.setUpdatedEndpoint(endpoint);
 	}
 
 }

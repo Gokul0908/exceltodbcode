@@ -9,51 +9,62 @@ import com.aventstack.extentreports.ExtentTest;
 
 public class TestListener implements ITestListener {
 
-    @Override
-    public void onStart(ITestContext context) {
-        ExtentReportManager.initReport();
-    }
+	@Override
+	public void onStart(ITestContext context) {
+		ExtentReportManager.initReport();
+	}
 
-    @Override
-    public void onFinish(ITestContext context) {
-        ExtentReportManager.flushReport();
-    }
+	@Override
+	public void onFinish(ITestContext context) {
+		ExtentReportManager.flushReport();
+	}
 
-    @Override
-    public void onTestStart(ITestResult result) {
-        String testName = result.getMethod().getMethodName();
-        Object[] params = result.getParameters();
-        if (params.length > 0) {
-            testName += " - " + params[0];
-        }
+	@Override
+	public void onTestStart(ITestResult result) {
+		String testName = result.getMethod().getMethodName();
+		Object[] params = result.getParameters();
+		if (params.length > 0) {
+			testName += " - " + params[0];
+		}
 
-        ExtentTest test = ExtentReportManager.createTest(testName);
-        result.setAttribute("extentTest", test);
-        test.log(Status.INFO, "Starting test: " + testName);
-    }
+		ExtentTest test = ExtentReportManager.createTest(testName);
+		result.setAttribute("extentTest", test);
+		test.log(Status.INFO, "Starting test: " + testName);
+	}
 
-    @Override
-    public void onTestSuccess(ITestResult result) {
-        ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
-        if (test != null) {
-            test.log(Status.PASS, "Test Passed");
-        }
-    }
+	@Override
+	public void onTestSuccess(ITestResult result) {
+		ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
+		if (test != null) {
+			test.log(Status.PASS, "Test Passed");
+		}
+	}
 
-    @Override
-    public void onTestFailure(ITestResult result) {
-        ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
-        if (test != null) {
-            test.log(Status.FAIL, "Test Failed");
-            test.log(Status.FAIL, result.getThrowable());
-        }
-    }
+	@Override
+	public void onTestFailure(ITestResult result) {
+		ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
+		if (test != null) {
+			test.log(Status.FAIL, "Test Failed");
+			test.log(Status.FAIL, result.getThrowable());
+			System.out.println("\n\n===== TEST FAILED: " + result.getName() + " =====");
+			if (result.getThrowable() != null) {
+				result.getThrowable().printStackTrace();
+			}
+		}
+	}
 
-    @Override
-    public void onTestSkipped(ITestResult result) {
-        ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
-        if (test != null) {
-            test.log(Status.SKIP, "Test Skipped");
-        }
-    }
+	@Override
+	public void onTestSkipped(ITestResult result) {
+		ExtentTest test = (ExtentTest) result.getAttribute("extentTest");
+		if (test != null) {
+			test.log(Status.SKIP, "Test Skipped");
+		}
+
+		// 🔥 Print skipped reason in console
+		System.out.println("\n===== TEST SKIPPED: " + result.getName() + " =====");
+		if (result.getThrowable() != null) {
+			result.getThrowable().printStackTrace();
+		}
+	}
+
 }
