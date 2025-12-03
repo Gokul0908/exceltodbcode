@@ -3,6 +3,7 @@ package com.ep.app.tests;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,27 +14,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.testng.Assert;
-import org.testng.ITestResult;
-import org.testng.Reporter;
 import org.testng.SkipException;
 
-import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.Status;
-import com.aventstack.extentreports.markuputils.CodeLanguage;
-import com.aventstack.extentreports.markuputils.MarkupHelper;
 import com.changepond.test.framework.actions.APIActions;
 import com.changepond.test.framework.actions.ExcelActions;
 import com.ep.app.dto.DataContext;
+import com.ep.app.utils.ReportUtil.java.ReportUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -47,6 +45,8 @@ public class Common {
 	private final DataContext dataContext;
 //	private static ExcelActions excelActions;
 	private final APIActions apiActions;
+	private static String reportFilePath;
+	private static String singleReportFilePath = null;
 
 	private static ExcelActions excelActions = new ExcelActions();
 
@@ -200,75 +200,74 @@ public class Common {
 
 	public void makeRequest(String method, String caseID, String sheet) {
 
-	    Map<String, String> data = getTestData(caseID, sheet);
+		Map<String, String> data = getTestData(caseID, sheet);
 
-	    String endpoint = dataContext.getUpdatedEndpoint();
-	    if (isNullOrEmpty(endpoint)) {
-	        endpoint = data.get("endPoint");
-	    }
+		String endpoint = dataContext.getUpdatedEndpoint();
+		if (isNullOrEmpty(endpoint)) {
+			endpoint = data.get("endPoint");
+		}
 
-	    if (isNullOrEmpty(method)) {
-	        throw new IllegalArgumentException("HTTP method (action) missing for caseID: " + caseID);
-	    }
+		if (isNullOrEmpty(method)) {
+			throw new IllegalArgumentException("HTTP method (action) missing for caseID: " + caseID);
+		}
 
-	    RequestSpecification request = dataContext.getRequest();
-	    Response response;
+		RequestSpecification request = dataContext.getRequest();
+		Response response;
 
-	    // ---- HANDLE FIRST: If {id} missing for standalone PUT / DELETE / GET ----
-	    if ((method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("DELETE") || method.equalsIgnoreCase("GET"))
-	            && endpoint.contains("{id}")
-	            && (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty())) {
+		// ---- HANDLE FIRST: If {id} missing for standalone PUT / DELETE / GET ----
+		if ((method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("DELETE") || method.equalsIgnoreCase("GET"))
+				&& endpoint.contains("{id}")
+				&& (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty())) {
 
-	        System.out.println("⚠ No POST id → Fetching latest user ID...");
+			System.out.println("⚠ No POST id → Fetching latest user ID...");
 
-	        Response tempResponse = RestAssured.given()
-	                .baseUri("https://gorest.co.in")
-	                .header("Authorization", "Bearer " + data.get("generatedToken"))
-	                .get("/public/v2/users");
+			Response tempResponse = RestAssured.given().baseUri("https://gorest.co.in")
+					.header("Authorization", "Bearer " + data.get("generatedToken")).get("/public/v2/users");
 
-	        String latestId = tempResponse.jsonPath().getString("[0].id");
-	        dataContext.setLastCreatedId(latestId);
+			String latestId = tempResponse.jsonPath().getString("[0].id");
+			dataContext.setLastCreatedId(latestId);
 
-	        System.out.println("✔ Latest ID fetched: " + latestId);
+			System.out.println("✔ Latest ID fetched: " + latestId);
 
-	        endpoint = endpoint.replace("{id}", latestId);
-	    }
+			endpoint = endpoint.replace("{id}", latestId);
+		}
 
-	    // ---- Resolve ID inside endpoint if already available (Chaining case) ----
-	    if (endpoint.contains("{id}")) {
-	        String lastId = dataContext.getLastCreatedId();
-	        if (lastId == null || lastId.trim().isEmpty()) {
-	            throw new IllegalStateException("Missing ID for endpoint: " + endpoint);
-	        }
-	        endpoint = endpoint.replace("{id}", lastId);
-	    }
+		// ---- Resolve ID inside endpoint if already available (Chaining case) ----
+		if (endpoint.contains("{id}")) {
+			String lastId = dataContext.getLastCreatedId();
+			if (lastId == null || lastId.trim().isEmpty()) {
+				throw new IllegalStateException("Missing ID for endpoint: " + endpoint);
+			}
+			endpoint = endpoint.replace("{id}", lastId);
+		}
 
-	    System.out.println("ENDPOINT = " + endpoint);
+		System.out.println("ENDPOINT = " + endpoint);
 
-	    // ---- Set Body only for POST & PUT ----
-	    if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
-	        String body = dataContext.getJsonBody();
-	        if (isNullOrEmpty(body)) throw new RuntimeException("Request body missing!");
-	        request.body(body);
-	    }
+		// ---- Set Body only for POST & PUT ----
+		if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+			String body = dataContext.getJsonBody();
+			if (isNullOrEmpty(body))
+				throw new RuntimeException("Request body missing!");
+			request.body(body);
+		}
 
-	    switch (method.toUpperCase()) {
-	        case "POST" -> {
-	            response = request.post(endpoint);
-	            String postId = response.jsonPath().getString("id");
-	            if (postId == null) postId = response.jsonPath().getString("data.id");
-	            dataContext.setLastCreatedId(postId);
-	            System.out.println("🔥 Saved POST ID = " + postId);
-	        }
-	        case "PUT" -> response = request.put(endpoint);
-	        case "DELETE" -> response = request.delete(endpoint);
-	        case "GET" -> response = request.get(endpoint);
-	        default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-	    }
+		switch (method.toUpperCase()) {
+		case "POST" -> {
+			response = request.post(endpoint);
+			String postId = response.jsonPath().getString("id");
+			if (postId == null)
+				postId = response.jsonPath().getString("data.id");
+			dataContext.setLastCreatedId(postId);
+			System.out.println("🔥 Saved POST ID = " + postId);
+		}
+		case "PUT" -> response = request.put(endpoint);
+		case "DELETE" -> response = request.delete(endpoint);
+		case "GET" -> response = request.get(endpoint);
+		default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+		}
 
-	    dataContext.setResponse(response);
+		dataContext.setResponse(response);
 	}
-
 
 	public void verifyResponseCode(String... expectedCodes) {
 		Response response = dataContext.getResponse();
@@ -408,34 +407,134 @@ public class Common {
 		apiActions.validateResponseWithJSONSchemaFile(response, schemaFilePath);
 	}
 
-//save api response
+	// 🔹 Save API Response into FINAL REPORT EXCEL (Single Report per Execution)
 	public void saveApiResponse(String fileName, String sheetName, String testCaseId, int headerRowIndex) {
-		String excelPath = getExcelFilePath(fileName);
-		List<String> sheetNames = List.of(sheetName);
+		try {
+			String baseExcel = System.getProperty("user.dir") + "/src/test/resources/testData/" + fileName + ".xlsx";
 
-		Response response = dataContext.getResponse();
-		Assert.assertNotNull(response, "Response is null for testCaseId: " + testCaseId);
+			// Create report file only once
+			if (singleReportFilePath == null) {
+				String outputExcelPath = ReportUtil.getReportFilePath();
+				dataContext.setReportFilePath(outputExcelPath);
 
-		String responseBody = response.getBody().asString();
-		int statusCode = response.getStatusCode();
-		String statusLine = response.getStatusLine();
-		String contentType = response.getContentType();
+				File reportFile = new File(outputExcelPath);
+				reportFile.getParentFile().mkdirs(); // ensure folder exists
 
-		int rowIndex = getRowIndexForTestCase(excelPath, sheetName, "caseID", testCaseId, headerRowIndex);
-		if (rowIndex == -1) {
-			System.out.println("TestCaseID not found in Excel: " + testCaseId);
-			return;
+				FileUtils.copyFile(new File(baseExcel), reportFile);
+				singleReportFilePath = reportFile.getAbsolutePath();
+
+				System.out.println("📌 Report Created: " + singleReportFilePath);
+			} else {
+				System.out.println("📎 Updating Existing Report: " + singleReportFilePath);
+			}
+
+			FileInputStream fis = new FileInputStream(singleReportFilePath);
+			Workbook workbook = WorkbookFactory.create(fis);
+			fis.close();
+
+			Sheet sheet = workbook.getSheet(sheetName);
+			if (sheet == null) {
+				System.out.println("⚠ Sheet not found: " + sheetName);
+				workbook.close();
+				return;
+			}
+
+			Row headerRow = sheet.getRow(headerRowIndex);
+			if (headerRow == null) {
+				System.out.println("⚠ Header row missing!");
+				workbook.close();
+				return;
+			}
+
+			int caseIdCol = -1, actionCol = -1, responseBodyCol = -1, statusCodeCol = -1, statusLineCol = -1,
+					contentTypeCol = -1;
+			for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+				Cell cell = headerRow.getCell(c);
+				if (cell == null)
+					continue;
+				String header = cell.getStringCellValue().trim().toLowerCase();
+				if (header.equals("caseid"))
+					caseIdCol = c;
+				if (header.equals("action"))
+					actionCol = c;
+				if (header.equals("responsebody"))
+					responseBodyCol = c;
+				if (header.equals("statuscode"))
+					statusCodeCol = c;
+				if (header.equals("statusline"))
+					statusLineCol = c;
+				if (header.equals("contenttype"))
+					contentTypeCol = c;
+			}
+
+			Response response = dataContext.getResponse();
+			if (response == null)
+				return;
+
+			String body = response.getBody().asString();
+			String status = String.valueOf(response.getStatusCode());
+			String statusLine = response.getStatusLine();
+			String contentType = response.getContentType();
+			String action = dataContext.getCurrentAction();
+
+			int targetRow = -1;
+			for (int r = headerRowIndex + 1; r <= sheet.getLastRowNum(); r++) {
+				Row row = sheet.getRow(r);
+				if (row == null)
+					continue;
+				String caseVal = row.getCell(caseIdCol).toString().trim();
+				String actionVal = (actionCol >= 0 && row.getCell(actionCol) != null)
+						? row.getCell(actionCol).toString().trim()
+						: "";
+
+				if (caseVal.equalsIgnoreCase(testCaseId)) {
+					if (action == null || actionVal.equalsIgnoreCase(action)) {
+						targetRow = r;
+						break;
+					}
+				}
+			}
+
+			if (targetRow == -1) {
+				System.out.println("⚠ No matching row for: " + testCaseId);
+				workbook.close();
+				return;
+			}
+
+			Row row = sheet.getRow(targetRow);
+			row.createCell(responseBodyCol).setCellValue(body);
+			row.createCell(statusCodeCol).setCellValue(status);
+			row.createCell(statusLineCol).setCellValue(statusLine);
+			row.createCell(contentTypeCol).setCellValue(contentType);
+
+			FileOutputStream fos = new FileOutputStream(singleReportFilePath);
+			workbook.write(fos);
+			fos.close();
+			workbook.close();
+
+			System.out.println(
+					"✅ Saved Response in: " + singleReportFilePath + " | Sheet: " + sheetName + " | Row: " + targetRow);
+
+		} catch (Exception e) {
+			System.out.println("❌ Error Updating Excel");
+			e.printStackTrace();
 		}
+	}
 
-		excelActions.setValueInSpecificCell(excelPath, sheetNames, "responseBody", headerRowIndex, rowIndex,
-				responseBody);
-		excelActions.setValueInSpecificCell(excelPath, sheetNames, "statusCode", headerRowIndex, rowIndex,
-				String.valueOf(statusCode));
-		excelActions.setValueInSpecificCell(excelPath, sheetNames, "statusLine", headerRowIndex, rowIndex, statusLine);
-		excelActions.setValueInSpecificCell(excelPath, sheetNames, "contentType", headerRowIndex, rowIndex,
-				contentType);
+	public void copyExcel(String sourcePath, String destinationPath) {
+		try (FileInputStream fis = new FileInputStream(new File(sourcePath));
+				XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
 
-		System.out.println("Saved response for " + testCaseId);
+			FileOutputStream fos = new FileOutputStream(new File(destinationPath));
+			workbook.write(fos);
+			fos.close();
+
+			System.out.println("Excel copied successfully to: " + destinationPath);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed to copy Excel file!");
+		}
 	}
 
 	public int getRowIndexForTestCase(String filePath, String sheetName, String headerName, String testCaseId,
@@ -738,7 +837,7 @@ public class Common {
 		}
 	}
 
-	public void executeChainedSteps(String filePath, String sheetName, String chainCaseID) {
+	public void executeChainedSteps(String filePath, String sheetName, String chainCaseID) throws IOException {
 		String dateFormat = "dd-MM-yyyy";
 		List<Map<String, String>> chainSteps = excelActions.extractExcelDataAsListOfMaps(filePath, sheetName,
 				chainCaseID, dateFormat);
@@ -758,14 +857,16 @@ public class Common {
 			String stepCaseID = stepData.get("caseID");
 			String endpointFromExcel = stepData.get("endPoint");
 
+			// 🔥 IMPORTANT: Set current action here
+			dataContext.setCurrentAction(method); // <-- ADDED LINE
+
 			if (method == null || stepCaseID == null) {
 				System.err.println("Skipping due to null method or caseID at step " + i);
 				continue;
 			}
 
-			// ⭐⭐ FIX: If method = PUT, append ID to the endpoint ⭐⭐
 			if (method.equalsIgnoreCase("PUT")) {
-				dataContext.setUpdatedEndpoint(endpointFromExcel); // put {id} as is
+				dataContext.setUpdatedEndpoint(endpointFromExcel);
 				System.out.println("🔧 Updated PUT endpoint = " + endpointFromExcel);
 			} else {
 				dataContext.setUpdatedEndpoint(endpointFromExcel);
@@ -790,10 +891,10 @@ public class Common {
 				}
 			}
 
-			// ⭐ Execute Request
+			// Execute Request
 			makeRequest(method, stepCaseID, sheetName);
 
-			// ⭐ Save ID after POST
+			// Save ID after POST
 			if (method.equalsIgnoreCase("POST")) {
 				Response response = dataContext.getResponse();
 				String postId = response.jsonPath().getString("id");
@@ -805,56 +906,30 @@ public class Common {
 				System.out.println("🔥 Saved lastCreatedId = " + postId);
 			}
 
-			// ⭐ Verify status codes // Need to remove Updated by SE
-//			switch (method.toUpperCase()) {
-//			case "GET" -> verifyResponseCode("200");
-//			case "POST" -> {
-//				verifyResponseCode("200", "201");
-//				updatePostIdInQueryParamForNextMatchingCaseID(sheetName, stepCaseID, i + 1, headerRowIndex);
-//			}
-//			case "PUT" -> verifyResponseCode("200");
-//			case "DELETE" -> verifyResponseCode("204");
-//			default -> throw new IllegalArgumentException("Unsupported method: " + method);
-//			}
-
-			// Skip validation for DELETE since response body is empty
-
-			// determine expected status code
+			// Status Validation
 			int expectedStatusCode;
 			if (method.equalsIgnoreCase("GET")) {
-
-				// GET after DELETE → expect 404
-				if ("DELETE".equalsIgnoreCase(prevMethod)) {
-					expectedStatusCode = 404;
-				} else {
-					expectedStatusCode = 200; // normal GET
-				}
-
+				expectedStatusCode = ("DELETE".equalsIgnoreCase(prevMethod)) ? 404 : 200;
 			} else if (method.equalsIgnoreCase("POST")) {
 				expectedStatusCode = 201;
-
 			} else if (method.equalsIgnoreCase("PUT")) {
 				expectedStatusCode = 200;
-
 			} else if (method.equalsIgnoreCase("DELETE")) {
 				expectedStatusCode = 204;
-
 			} else {
 				throw new IllegalArgumentException("Unsupported method: " + method);
 			}
 
-			// verify status code
 			verifyResponseCode(String.valueOf(expectedStatusCode));
 
-			// validate only when response has JSON body
 			if (!method.equalsIgnoreCase("DELETE") && expectedStatusCode != 404) {
 				validateResponseParams(stepCaseID, sheetName);
 			}
 
-			// update previous method
 			prevMethod = method;
 
-			saveApiResponse("APIData.xlsx", sheetName, stepCaseID, 0);
+			saveApiResponse("APIData", sheetName, stepCaseID, headerRowIndex);
+
 		}
 	}
 

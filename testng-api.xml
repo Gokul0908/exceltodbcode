@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="API Suite">
+	<listeners>
+		<listener class-name="com.ep.app.reports.DashboardReport" />
+	</listeners>
+
+	<test name="Enabled API Execution">
+		<classes>
+			<class name="com.ep.app.tests.RunEnabledAPITests" />
+		</classes>
+	</test>
+</suite>

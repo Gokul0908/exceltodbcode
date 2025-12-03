@@ -1,5 +1,6 @@
 package com.ep.app.tests;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.testng.ITestResult;
@@ -30,7 +31,7 @@ public class APIMethods {
 
 	@Test(priority = 1)
 	@Parameters("caseID")
-	public void testGETRequest(String caseID) {
+	public void testGETRequest(String caseID) throws IOException {
 		String sheet = "apiGET";
 		Map<String, String> data = common.getTestData(caseID, sheet);
 		String method = data.get("action");
@@ -42,12 +43,13 @@ public class APIMethods {
 		common.makeRequest(method, caseID, sheet);
 		common.verifyResponseCode("200");
 		common.validateResponseParams(caseID, sheet);
-		common.saveApiResponse("APIData.xlsx", sheet, caseID, 0);
+		common.saveApiResponse("APIData", sheet, caseID, 0);
+
 	}
 
 	@Test(priority = 2)
 	@Parameters("caseID")
-	public void testPOSTRequest(String caseID) {
+	public void testPOSTRequest(String caseID) throws IOException {
 		String sheet = "apiPOST";
 		Map<String, String> data = common.getTestData(caseID, sheet);
 		String method = data.get("action");
@@ -59,12 +61,13 @@ public class APIMethods {
 		common.makeRequest(method, caseID, sheet);
 		common.verifyResponseCode("200", "201");
 		common.validateResponseParams(caseID, sheet);
-		common.saveApiResponse("APIData.xlsx", sheet, caseID, 0);
+		common.saveApiResponse("APIData", sheet, caseID, 0);
+
 	}
 
 	@Test(priority = 3)
 	@Parameters("caseID")
-	public void testPUTRequest(String caseID) {
+	public void testPUTRequest(String caseID) throws IOException {
 		String sheet = "apiPUT";
 		Map<String, String> data = common.getTestData(caseID, sheet);
 		String method = data.get("action");
@@ -77,12 +80,13 @@ public class APIMethods {
 		common.makeRequest(method, caseID, sheet);
 		common.verifyResponseCode("200");
 		common.validateResponseParams(caseID, sheet);
-		common.saveApiResponse("APIData.xlsx", sheet, caseID, 0);
+		common.saveApiResponse("APIData", sheet, caseID, 0);
+
 	}
 
 	@Test(priority = 4)
 	@Parameters("caseID")
-	public void testDELETERequest(String caseID) {
+	public void testDELETERequest(String caseID) throws IOException {
 		String sheet = "apiDELETE";
 		Map<String, String> data = common.getTestData(caseID, sheet);
 		String method = data.get("action");
@@ -94,6 +98,7 @@ public class APIMethods {
 		common.setAuthToken(caseID, sheet);
 		common.makeRequest(method, caseID, sheet);
 		common.verifyResponseCode("204");
-		common.saveApiResponse("APIData.xlsx", sheet, caseID, 0);
+		common.saveApiResponse("APIData", sheet, caseID, 0);
+
 	}
 }

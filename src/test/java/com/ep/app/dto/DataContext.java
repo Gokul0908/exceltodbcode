@@ -2,7 +2,6 @@ package com.ep.app.dto;
 
 import java.util.List;
 
-import com.changepond.test.framework.actions.APIActions;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
@@ -17,6 +16,8 @@ public class DataContext {
 	private String randomValue;
 	private String lastCreatedId;
 	private String updatedEndpoint;
+	private String reportFilePath;
+	private String currentAction;
 
 	// *******************************************************************************************
 	// Below fields are declared to randomly generate values and reuse those values
@@ -122,6 +123,22 @@ public class DataContext {
 	public String getUpdatedEndpoint() {
 		// TODO Auto-generated method stub
 		return updatedEndpoint;
+	}
+
+	public String getReportFilePath() {
+		return reportFilePath;
+	}
+
+	public void setReportFilePath(String reportFilePath) {
+		this.reportFilePath = reportFilePath;
+	}
+
+	public String getCurrentAction() {
+		return currentAction;
+	}
+
+	public void setCurrentAction(String action) {
+		this.currentAction = action;
 	}
 
 	//

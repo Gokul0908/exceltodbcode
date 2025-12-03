@@ -1,5 +1,7 @@
 package com.ep.app.tests;
 
+import java.io.IOException;
+
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
@@ -21,7 +23,7 @@ public class ChainingTest {
 
 	@Test
 	@Parameters("chainCaseID")
-	public void testChainingRequest(String chainCaseID) {
+	public void testChainingRequest(String chainCaseID) throws IOException {
 		String filePath = Common.getExcelFilePath(ConfigReader.getConfigValue("excelFile"));
 		common.executeChainedSteps(filePath, "chainingRequests", chainCaseID);
 	}

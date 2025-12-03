@@ -3,11 +3,18 @@ package com.ep.app.tests;
 import java.util.List;
 
 import org.testng.TestNG;
+import org.testng.annotations.Test;
+
 import com.ep.app.utils.ConfigReader;
 
 public class RunEnabledAPITests {
 
 	public static void main(String[] args) {
+		runEnabledTests1();
+	}
+
+	@Test
+	public static void runEnabledTests1() {
 
 		String fileName = ConfigReader.getConfigValue("excelFile");
 		String excelPath = Common.getExcelFilePath(fileName);
@@ -31,7 +38,7 @@ public class RunEnabledAPITests {
 			Common.generateChainingXML(chainingGroupIDs, "src/test/resources/testng-chaining.xml");
 			runTestNGSuite("src/test/resources/testng-chaining.xml");
 		} else {
-			System.out.println("⚠ No chaining test cases enabled. Skipping chaining suite.");
+			System.out.println(" ---> No chaining test cases enabled. Skipping chaining suite <-----");
 		}
 
 	}
@@ -41,4 +48,10 @@ public class RunEnabledAPITests {
 		testng.setTestSuites(List.of(xmlFilePath));
 		testng.run();
 	}
+
+	@Test
+	public void runEnabledTests() {
+		main(null); // Call your existing code
+	}
+
 }
