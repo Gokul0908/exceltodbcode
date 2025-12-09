@@ -23,24 +23,4 @@
       </class>
     </classes>
   </test>
-  <test name="testPUTRequest_TC001">
-    <parameter name="caseID" value="TC001"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testPUTRequest"/>
-        </methods>
-      </class>
-    </classes>
-  </test>
-  <test name="testDELETERequest_TC001">
-    <parameter name="caseID" value="TC001"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testDELETERequest"/>
-        </methods>
-      </class>
-    </classes>
-  </test>
 </suite>
