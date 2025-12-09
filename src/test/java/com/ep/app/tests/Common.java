@@ -31,7 +31,7 @@ import org.testng.SkipException;
 import com.changepond.test.framework.actions.APIActions;
 import com.changepond.test.framework.actions.ExcelActions;
 import com.ep.app.dto.DataContext;
-import com.ep.app.utils.ReportUtil.java.ReportUtil;
+import com.ep.app.utils.ReportUtil.ReportUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -253,16 +253,35 @@ public class Common {
 
 		switch (method.toUpperCase()) {
 		case "POST" -> {
+			long start = System.currentTimeMillis();
 			response = request.post(endpoint);
+			long end = System.currentTimeMillis();
+			dataContext.setResponseTime(end - start); // ⬅ Save response time
+
 			String postId = response.jsonPath().getString("id");
 			if (postId == null)
 				postId = response.jsonPath().getString("data.id");
 			dataContext.setLastCreatedId(postId);
 			System.out.println("🔥 Saved POST ID = " + postId);
 		}
-		case "PUT" -> response = request.put(endpoint);
-		case "DELETE" -> response = request.delete(endpoint);
-		case "GET" -> response = request.get(endpoint);
+		case "PUT" -> {
+			long start = System.currentTimeMillis();
+			response = request.put(endpoint);
+			long end = System.currentTimeMillis();
+			dataContext.setResponseTime(end - start);
+		}
+		case "DELETE" -> {
+			long start = System.currentTimeMillis();
+			response = request.delete(endpoint);
+			long end = System.currentTimeMillis();
+			dataContext.setResponseTime(end - start);
+		}
+		case "GET" -> {
+			long start = System.currentTimeMillis();
+			response = request.get(endpoint);
+			long end = System.currentTimeMillis();
+			dataContext.setResponseTime(end - start);
+		}
 		default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
 		}
 
@@ -412,16 +431,16 @@ public class Common {
 		try {
 			String baseExcel = System.getProperty("user.dir") + "/src/test/resources/testData/" + fileName + ".xlsx";
 
-			// Create report file only once
 			if (singleReportFilePath == null) {
 				String outputExcelPath = ReportUtil.getReportFilePath();
 				dataContext.setReportFilePath(outputExcelPath);
 
 				File reportFile = new File(outputExcelPath);
-				reportFile.getParentFile().mkdirs(); // ensure folder exists
+				reportFile.getParentFile().mkdirs();
 
 				FileUtils.copyFile(new File(baseExcel), reportFile);
 				singleReportFilePath = reportFile.getAbsolutePath();
+				dataContext.setReportFilePath(singleReportFilePath);
 
 				System.out.println("📌 Report Created: " + singleReportFilePath);
 			} else {
@@ -447,12 +466,14 @@ public class Common {
 			}
 
 			int caseIdCol = -1, actionCol = -1, responseBodyCol = -1, statusCodeCol = -1, statusLineCol = -1,
-					contentTypeCol = -1;
+					contentTypeCol = -1, responseTimeCol = -1; // 🔹 NEW COLUMN
+
 			for (int c = 0; c < headerRow.getLastCellNum(); c++) {
 				Cell cell = headerRow.getCell(c);
 				if (cell == null)
 					continue;
 				String header = cell.getStringCellValue().trim().toLowerCase();
+
 				if (header.equals("caseid"))
 					caseIdCol = c;
 				if (header.equals("action"))
@@ -465,6 +486,9 @@ public class Common {
 					statusLineCol = c;
 				if (header.equals("contenttype"))
 					contentTypeCol = c;
+
+				if (header.equals("responsetime"))
+					responseTimeCol = c; // 🔹 NEW COLUMN DETECT
 			}
 
 			Response response = dataContext.getResponse();
@@ -476,6 +500,7 @@ public class Common {
 			String statusLine = response.getStatusLine();
 			String contentType = response.getContentType();
 			String action = dataContext.getCurrentAction();
+			long responseTime = dataContext.getResponseTime(); // 🔹 GET STORED RESPONSE TIME
 
 			int targetRow = -1;
 			for (int r = headerRowIndex + 1; r <= sheet.getLastRowNum(); r++) {
@@ -488,7 +513,8 @@ public class Common {
 						: "";
 
 				if (caseVal.equalsIgnoreCase(testCaseId)) {
-					if (action == null || actionVal.equalsIgnoreCase(action)) {
+					Cell respCell = row.getCell(responseBodyCol);
+					if (respCell == null || respCell.getStringCellValue().trim().isEmpty()) {
 						targetRow = r;
 						break;
 					}
@@ -507,11 +533,16 @@ public class Common {
 			row.createCell(statusLineCol).setCellValue(statusLine);
 			row.createCell(contentTypeCol).setCellValue(contentType);
 
+			if (responseTimeCol >= 0) {
+				row.createCell(responseTimeCol).setCellValue(responseTime); // 🔹 SAVE VALUE
+			}
+
 			FileOutputStream fos = new FileOutputStream(singleReportFilePath);
 			workbook.write(fos);
 			fos.close();
 			workbook.close();
 
+			System.out.println("⏱ Response Time Saved: " + responseTime + " ms");
 			System.out.println(
 					"✅ Saved Response in: " + singleReportFilePath + " | Sheet: " + sheetName + " | Row: " + targetRow);
 

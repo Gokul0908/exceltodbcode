@@ -9,12 +9,8 @@ import com.ep.app.utils.ConfigReader;
 
 public class RunEnabledAPITests {
 
-	public static void main(String[] args) {
-		runEnabledTests1();
-	}
-
 	@Test
-	public static void runEnabledTests1() {
+	public static void runEnabledTests() {
 
 		String fileName = ConfigReader.getConfigValue("excelFile");
 		String excelPath = Common.getExcelFilePath(fileName);
@@ -47,11 +43,6 @@ public class RunEnabledAPITests {
 		TestNG testng = new TestNG();
 		testng.setTestSuites(List.of(xmlFilePath));
 		testng.run();
-	}
-
-	@Test
-	public void runEnabledTests() {
-		main(null); // Call your existing code
 	}
 
 }

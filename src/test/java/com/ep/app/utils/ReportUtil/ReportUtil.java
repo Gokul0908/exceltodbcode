@@ -1,4 +1,4 @@
-package com.ep.app.utils.ReportUtil.java;
+package com.ep.app.utils.ReportUtil;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

@@ -36,6 +36,16 @@ public class DataContext {
 		this.request = request;
 	}
 
+	private long responseTime;
+
+	public long getResponseTime() {
+		return responseTime;
+	}
+
+	public void setResponseTime(long responseTime) {
+		this.responseTime = responseTime;
+	}
+
 	public static RequestSpecification getRequest() {
 		return request;
 	}

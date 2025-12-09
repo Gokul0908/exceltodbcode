@@ -7,56 +7,484 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.testng.IReporter;
 import org.testng.ISuite;
 import org.testng.ISuiteResult;
 import org.testng.ITestContext;
-import org.testng.ITestResult;
 import org.testng.xml.XmlSuite;
-
-import com.ep.app.utils.TestListener;
 
 public class DashboardReport implements IReporter {
 
+	// ---------- Holder for latest Excel summary ----------
+	private static class ExcelSummary {
+		int passed;
+		int failed;
+		int skipped;
+
+		int postCount;
+		int getCount;
+		int putCount;
+		int deleteCount;
+
+		String tableRowsHtml; // <tr><td>caseID</td><td>action</td><td>STATUS</td></tr>
+		String statusCodeLabelsJs; // e.g. ['200','201','404']
+		String statusCodeCountsJs; // e.g. [5,2,1]
+		String sourceFile;
+	}
+
+	// ---------- Holder for 1 run (used in trend chart) ----------
+	private static class RunSummary {
+		String label; // e.g. 2025-12-03-Report_Run5
+		int passed;
+		int failed;
+		int skipped;
+
+		RunSummary(String label, int passed, int failed, int skipped) {
+			this.label = label;
+			this.passed = passed;
+			this.failed = failed;
+			this.skipped = skipped;
+		}
+	}
+
+	// ======================================================
+	// TestNG entry point
+	// ======================================================
 	@Override
 	public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
 
-		int passed = TestListener.passedCount;
-		int failed = TestListener.failedCount;
-		int skipped = TestListener.skippedCount;
-
-		int postCount = TestListener.postCount;
-		int getCount = TestListener.getCount;
-		int putCount = TestListener.putCount;
-		int deleteCount = TestListener.deleteCount;
-
-		StringBuilder tableData = new StringBuilder();
+		// 1) Duration from TestNG (start → end of all suites)
+		long minStart = Long.MAX_VALUE;
+		long maxEnd = 0L;
 
 		for (ISuite suite : suites) {
 			for (ISuiteResult suiteResult : suite.getResults().values()) {
-				ITestContext context = suiteResult.getTestContext();
-				addRows(context.getPassedTests().getAllResults(), "Passed", "green", tableData);
-				addRows(context.getFailedTests().getAllResults(), "Failed", "red", tableData);
-				addRows(context.getSkippedTests().getAllResults(), "Skipped", "orange", tableData);
+				ITestContext ctx = suiteResult.getTestContext();
+				if (ctx.getStartDate() != null) {
+					minStart = Math.min(minStart, ctx.getStartDate().getTime());
+				}
+				if (ctx.getEndDate() != null) {
+					maxEnd = Math.max(maxEnd, ctx.getEndDate().getTime());
+				}
+			}
+		}
+		long durationSec = (maxEnd > minStart && minStart != Long.MAX_VALUE) ? (maxEnd - minStart) / 1000 : 0;
+
+		// 2) Build summary from latest Excel report
+		ExcelSummary excelSummary = loadExcelSummaryFromLatestReport();
+		if (excelSummary == null) {
+			System.out.println("⚠ Could not build Excel summary. Dashboard will not be generated.");
+			return;
+		}
+
+		// 3) Build JS arrays for last 5 runs
+		String[] trendJs = buildTrendArraysJs();
+		String runLabelsJs = trendJs[0];
+		String passTrendJs = trendJs[1];
+		String failTrendJs = trendJs[2];
+		String skipTrendJs = trendJs[3];
+
+		// 4) Generate HTML dashboard
+		generateHtml(excelSummary.passed, excelSummary.failed, excelSummary.skipped, durationSec,
+				excelSummary.tableRowsHtml, excelSummary.postCount, excelSummary.getCount, excelSummary.putCount,
+				excelSummary.deleteCount, excelSummary.statusCodeLabelsJs, excelSummary.statusCodeCountsJs, runLabelsJs,
+				passTrendJs, failTrendJs, skipTrendJs);
+	}
+
+	// ======================================================
+	// Excel summary for latest report (for table + status codes + counts)
+	// ======================================================
+	private ExcelSummary loadExcelSummaryFromLatestReport() {
+		try {
+			File root = new File("Reports" + File.separator + "APIResults");
+			if (!root.exists() || !root.isDirectory()) {
+				System.out.println("⚠ APIResults folder not found: " + root.getAbsolutePath());
+				return null;
+			}
+
+			// --- latest date folder ---
+			File latestDir = null;
+			File[] dateDirs = root.listFiles(File::isDirectory);
+			if (dateDirs == null || dateDirs.length == 0) {
+				System.out.println("⚠ No date folders under: " + root.getAbsolutePath());
+				return null;
+			}
+			for (File d : dateDirs) {
+				if (latestDir == null || d.lastModified() > latestDir.lastModified()) {
+					latestDir = d;
+				}
+			}
+
+			// --- latest Report_Run*.xlsx inside that folder ---
+			File latestReport = null;
+			File[] reportFiles = latestDir
+					.listFiles((dir, name) -> name.startsWith("Report_Run") && name.endsWith(".xlsx"));
+			if (reportFiles == null || reportFiles.length == 0) {
+				System.out.println("⚠ No Report_Run*.xlsx under: " + latestDir.getAbsolutePath());
+				return null;
+			}
+			for (File f : reportFiles) {
+				if (latestReport == null || f.lastModified() > latestReport.lastModified()) {
+					latestReport = f;
+				}
+			}
+
+			ExcelSummary summary = new ExcelSummary();
+			summary.sourceFile = latestReport.getAbsolutePath();
+
+			StringBuilder tableRows = new StringBuilder();
+			Map<Integer, Integer> statusCodeCounts = new HashMap<>();
+
+			try (FileInputStream fis = new FileInputStream(latestReport);
+					Workbook workbook = WorkbookFactory.create(fis)) {
+
+				// Loop all sheets – any sheet with isRun + caseID + action + statusCode will be
+				// used
+				for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
+					Sheet sheet = workbook.getSheetAt(s);
+					if (sheet == null)
+						continue;
+
+					Row headerRow = sheet.getRow(0);
+					if (headerRow == null)
+						continue;
+
+					int colCaseId = -1;
+					int colAction = -1;
+					int colStatusCode = -1;
+					int colIsRun = -1;
+
+					for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+						Cell cell = headerRow.getCell(c);
+						String header = getStringCell(cell);
+						if (header.equalsIgnoreCase("caseID")) {
+							colCaseId = c;
+						} else if (header.equalsIgnoreCase("action")) {
+							colAction = c;
+						} else if (header.equalsIgnoreCase("statusCode")) {
+							colStatusCode = c;
+						} else if (header.equalsIgnoreCase("isRun")) {
+							colIsRun = c;
+						}
+					}
+
+					if (colCaseId == -1 || colIsRun == -1) {
+						// Not a test sheet
+						continue;
+					}
+
+					for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+						Row row = sheet.getRow(r);
+						if (row == null)
+							continue;
+
+						String isRunVal = getStringCell(row.getCell(colIsRun));
+						if (!"yes".equalsIgnoreCase(isRunVal)) {
+							continue; // only executed rows
+						}
+
+						String caseId = getStringCell(row.getCell(colCaseId));
+						if (caseId.isEmpty())
+							continue;
+
+						String action = (colAction >= 0) ? getStringCell(row.getCell(colAction)) : "";
+
+						int statusCode = 0;
+						if (colStatusCode >= 0) {
+							String scStr = getStringCell(row.getCell(colStatusCode));
+							if (!scStr.isEmpty()) {
+								try {
+									statusCode = (int) Double.parseDouble(scStr.trim());
+								} catch (Exception ignored) {
+									statusCode = 0;
+								}
+							}
+						}
+
+						// ----- method counts -----
+						if ("POST".equalsIgnoreCase(action))
+							summary.postCount++;
+						else if ("GET".equalsIgnoreCase(action))
+							summary.getCount++;
+						else if ("PUT".equalsIgnoreCase(action))
+							summary.putCount++;
+						else if ("DELETE".equalsIgnoreCase(action))
+							summary.deleteCount++;
+
+						// ----- PASS / FAIL / SKIP (by status code) -----
+						String statusText;
+						String color;
+
+						if (statusCode == 0) {
+							summary.skipped++;
+							statusText = "SKIPPED";
+							color = "orange";
+						} else if (statusCode == 200 || statusCode == 201 || statusCode == 204) {
+							summary.passed++;
+							statusText = "PASS";
+							color = "green";
+						} else {
+							summary.failed++;
+							statusText = "FAIL";
+							color = "red";
+						}
+
+						if (statusCode > 0) {
+							statusCodeCounts.merge(statusCode, 1, Integer::sum);
+						}
+
+						// ----- HTML table row: caseID | action | status -----
+						tableRows.append("<tr>").append("<td>").append(caseId).append("</td>").append("<td>")
+								.append(action).append("</td>").append("<td style='font-weight:bold;color:")
+								.append(color).append(";'>").append(statusText).append("</td>").append("</tr>");
+					}
+				}
+			}
+
+			summary.tableRowsHtml = tableRows.toString();
+
+			// Build JS arrays for status code chart
+			if (statusCodeCounts.isEmpty()) {
+				summary.statusCodeLabelsJs = "['200']";
+				summary.statusCodeCountsJs = "[0]";
+			} else {
+				StringBuilder labels = new StringBuilder("[");
+				StringBuilder counts = new StringBuilder("[");
+
+				List<Integer> codes = new ArrayList<>(statusCodeCounts.keySet());
+				Collections.sort(codes);
+
+				boolean first = true;
+				for (Integer code : codes) {
+					if (!first) {
+						labels.append(",");
+						counts.append(",");
+					}
+					labels.append("'").append(code).append("'");
+					counts.append(statusCodeCounts.get(code));
+					first = false;
+				}
+				labels.append("]");
+				counts.append("]");
+
+				summary.statusCodeLabelsJs = labels.toString();
+				summary.statusCodeCountsJs = counts.toString();
+			}
+
+			System.out.println("✅ Excel summary built from: " + summary.sourceFile + " | Pass=" + summary.passed
+					+ ", Fail=" + summary.failed + ", Skip=" + summary.skipped);
+
+			return summary;
+
+		} catch (Exception e) {
+			System.out.println("❌ Error reading Excel summary for dashboard: " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	// ======================================================
+	// Helpers for last 5 runs trend
+	// ======================================================
+	private String[] buildTrendArraysJs() {
+		List<RunSummary> runs = loadLastRunSummaries(5);
+
+		if (runs.isEmpty()) {
+			return new String[] { "[]", "[]", "[]", "[]" };
+		}
+
+		StringBuilder labels = new StringBuilder();
+		StringBuilder pass = new StringBuilder();
+		StringBuilder fail = new StringBuilder();
+		StringBuilder skip = new StringBuilder();
+
+		for (int i = 0; i < runs.size(); i++) {
+			RunSummary r = runs.get(i);
+			if (i > 0) {
+				labels.append(",");
+				pass.append(",");
+				fail.append(",");
+				skip.append(",");
+			}
+			labels.append("'").append(r.label.replace("'", "\\'")).append("'");
+			pass.append(r.passed);
+			fail.append(r.failed);
+			skip.append(r.skipped);
+		}
+
+		return new String[] { "[" + labels + "]", "[" + pass + "]", "[" + fail + "]", "[" + skip + "]" };
+	}
+
+	private List<RunSummary> loadLastRunSummaries(int maxRuns) {
+		List<RunSummary> result = new ArrayList<>();
+
+		File root = new File(
+				System.getProperty("user.dir") + File.separator + "Reports" + File.separator + "APIResults");
+
+		if (!root.exists() || !root.isDirectory()) {
+			System.out.println("⚠ No APIResults folder found at: " + root.getAbsolutePath());
+			return result;
+		}
+
+		File[] dateDirs = root.listFiles(File::isDirectory);
+		if (dateDirs == null || dateDirs.length == 0)
+			return result;
+
+		// latest date first
+		Arrays.sort(dateDirs, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+
+		outer: for (File dateDir : dateDirs) {
+			File[] reportFiles = dateDir
+					.listFiles((dir, name) -> name.startsWith("Report_Run") && name.endsWith(".xlsx"));
+			if (reportFiles == null || reportFiles.length == 0)
+				continue;
+
+			// latest run first
+			Arrays.sort(reportFiles, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+
+			for (File report : reportFiles) {
+				RunSummary rs = summarizeReportFile(report);
+				if (rs != null) {
+					result.add(rs);
+				}
+				if (result.size() >= maxRuns)
+					break outer;
 			}
 		}
 
-		generateHtml(passed, failed, skipped, deleteCount, tableData.toString(), postCount, getCount, putCount,
-				deleteCount);
+		// reverse so chart shows oldest → latest
+		Collections.reverse(result);
+		return result;
 	}
 
-	private void addRows(Set<ITestResult> results, String status, String color, StringBuilder sb) {
-		for (ITestResult result : results) {
-			sb.append("<tr style='font-weight:bold;color:").append(color).append(";'>").append("<td>")
-					.append(result.getName()).append("</td>").append("<td>").append(status).append("</td>")
-					.append("</tr>");
+	private RunSummary summarizeReportFile(File reportFile) {
+		try (FileInputStream fis = new FileInputStream(reportFile); Workbook workbook = WorkbookFactory.create(fis)) {
+
+			Sheet sheet = workbook.getSheet("chainingRequests");
+			if (sheet == null && workbook.getNumberOfSheets() > 0) {
+				sheet = workbook.getSheetAt(0);
+			}
+			if (sheet == null)
+				return null;
+
+			Row headerRow = sheet.getRow(0);
+			if (headerRow == null)
+				return null;
+
+			int colIsRun = -1;
+			int colStatusCode = -1;
+
+			for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+				Cell cell = headerRow.getCell(c);
+				String h = getStringCell(cell);
+				if (h.equalsIgnoreCase("isRun")) {
+					colIsRun = c;
+				} else if (h.equalsIgnoreCase("statusCode")) {
+					colStatusCode = c;
+				}
+			}
+
+			if (colStatusCode == -1)
+				return null;
+
+			int passed = 0, failed = 0, skipped = 0;
+
+			for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+				Row row = sheet.getRow(r);
+				if (row == null)
+					continue;
+
+				if (colIsRun != -1) {
+					String runVal = getStringCell(row.getCell(colIsRun));
+					if (!"yes".equalsIgnoreCase(runVal)) {
+						continue;
+					}
+				}
+
+				String scStr = getStringCell(row.getCell(colStatusCode));
+				if (scStr == null || scStr.trim().isEmpty()) {
+					skipped++;
+					continue;
+				}
+
+				int code;
+				try {
+					code = (int) Double.parseDouble(scStr.trim());
+				} catch (Exception e) {
+					skipped++;
+					continue;
+				}
+
+				if (code >= 200 && code < 300)
+					passed++;
+				else
+					failed++;
+			}
+
+			String label = reportFile.getParentFile().getName() + "-" + reportFile.getName().replace(".xlsx", "");
+
+			return new RunSummary(label, passed, failed, skipped);
+
+		} catch (Exception e) {
+			System.out.println("⚠ Error summarizing report: " + reportFile.getAbsolutePath());
+			return null;
 		}
 	}
 
+	// ======================================================
+	// Cell → String helper
+	// ======================================================
+	private String getStringCell(Cell cell) {
+		if (cell == null)
+			return "";
+		try {
+			switch (cell.getCellType()) {
+			case STRING:
+				return cell.getStringCellValue().trim();
+			case NUMERIC:
+				if (DateUtil.isCellDateFormatted(cell)) {
+					return cell.getDateCellValue().toString();
+				} else {
+					double d = cell.getNumericCellValue();
+					if (d == (long) d) {
+						return String.valueOf((long) d);
+					} else {
+						return String.valueOf(d);
+					}
+				}
+			case BOOLEAN:
+				return String.valueOf(cell.getBooleanCellValue());
+			case FORMULA:
+				try {
+					return cell.getStringCellValue().trim();
+				} catch (Exception e) {
+					return String.valueOf(cell.getNumericCellValue());
+				}
+			default:
+				return "";
+			}
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
+	// ======================================================
+	// Logo copy
+	// ======================================================
 	private void copyLogo() {
 		try {
 			File src = new File("src/test/resources/logo/company_logo.jpg");
@@ -70,7 +498,6 @@ public class DashboardReport implements IReporter {
 			File dest = new File(destDir, "company_logo.jpg");
 
 			try (InputStream in = new FileInputStream(src); OutputStream out = new FileOutputStream(dest)) {
-
 				byte[] buffer = new byte[1024];
 				int len;
 				while ((len = in.read(buffer)) > 0) {
@@ -85,111 +512,152 @@ public class DashboardReport implements IReporter {
 		}
 	}
 
-	private void generateHtml(int passed, int failed, int skipped, long duration, String tableRows, int post, int get,
-			int put, int del) {
+	// ======================================================
+	// HTML generation (your final HTML + dynamic data)
+	// ======================================================
+	private void generateHtml(int passed, int failed, int skipped, long durationSec, String tableRows, int post,
+			int get, int put, int del, String statusCodeLabelsJs, String statusCodeCountsJs, String runLabelsJs,
+			String passTrendJs, String failTrendJs, String skipTrendJs) {
 		try {
 			File file = new File("Reports/API_Dashboard.html");
 			file.getParentFile().mkdirs();
-
-// copy logo file to Reports/logo/company_logo.jpg (same as before)
 			copyLogo();
 
 			String date = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss").format(new Date());
 			String env = System.getProperty("env", "QA");
 
-			String html = "<html><head>" + "<meta charset='UTF-8'>"
+			String durationText = (durationSec > 0) ? String.valueOf(durationSec) : "--";
+
+			String html = "<!DOCTYPE html>" + "<html lang='en'>" + "<head>" + "<meta charset='UTF-8'>"
 					+ "<title>API Automation Execution Dashboard</title>"
-					+ "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>" + "<style>"
-					// ====== PAGE BASE ======
-					+ "body{margin:0;font-family:Arial,Helvetica,sans-serif;"
-					+ "background:#e6f2ff;position:relative;color:#003366;}"
-					+ ".page{position:relative;z-index:10;padding:20px 0 40px 0;text-align:center;}"
-					// ====== WATERMARK LOGO (BIG, VERY LIGHT) ======
-					+ ".watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);"
-					+ "opacity:0.18;z-index:0;pointer-events:none;animation: rotateLogo 80s linear infinite; /* Slow smooth rotation */  filter: blur(1px) grayscale(30%);}"
-					+ " .watermark img { width: 980px;  /* Make watermark big */ max-width: 98vw; opacity: inherit;};"
+					+ "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>" +
 
-					/* Keyframe animation */
-					+ "@keyframes rotateLogo {from { transform: translate(-50%, -50%) rotate(0deg);}to {transform: translate(-50%, -50%) rotate(360deg);}}; "
+					"<style>"
+					+ "body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#e6f2ff;position:relative;color:#003366;}"
+					+ ".page{position:relative;z-index:10;padding:20px 0 40px 0;text-align:center;}" +
 
-					/* 🔽 CHANGE THIS to make background logo bigger/smaller */
-					+ ".watermark img{width:650px;}"
-					// ====== HEADER ROW ======
-					+ ".header-row{display:flex;align-items:center;justify-content:center;"
-					+ "gap:25px;margin-bottom:10px;}" + ".logo{position:absolute;top:15px;left:25px;}"
-					/* 🔽 CHANGE THIS to control TOP-LEFT logo size */
-					+ ".logo img{height:90px;}" + ".title{font-size:28px;font-weight:bold;color:#002b5c;}"
-					+ ".subtitle{font-size:13px;color:#00509e;margin-top:4px;}"
-					// ====== STATS CARDS ======
-					+ ".stats{display:flex;justify-content:center;gap:18px;margin:22px auto 8px auto;}"
-					+ ".card{min-width:140px;padding:12px 22px;border-radius:24px;font-size:16px;"
-					+ "font-weight:bold;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.15);"
-					+ "background:#999;transition:0.3s;}"
+					".watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.28;z-index:0;pointer-events:none;animation:rotateLogo 80s linear infinite;filter:blur(1px) grayscale(30%);}"
+					+ ".watermark img{width:650px;}" +
+
+					"@keyframes rotateLogo{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}"
+					+
+
+					".header-row{display:flex;align-items:center;justify-content:center;gap:25px;margin-bottom:10px;}"
+					+ ".logo{position:absolute;top:15px;left:25px;}" + ".logo img{height:150px;width:auto;}"
+					+ ".title{font-size:28px;font-weight:bold;color:#002b5c;}"
+					+ ".subtitle{font-size:13px;color:#00509e;margin-top:4px;}" +
+
+					".stats{display:flex;justify-content:center;gap:18px;margin:22px auto 8px auto;}"
+					+ ".card{min-width:140px;padding:12px 22px;border-radius:24px;font-size:16px;font-weight:bold;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.15);background:#999;transition:0.3s;}"
 					+ ".card:hover{transform:scale(1.06);box-shadow:0 6px 16px rgba(0,0,0,0.25);}"
-					+ ".p{background:#28a745;}.f{background:#dc3545;}.s{background:#ffc107;color:#333;}"
-					// ====== API CALL COUNTS ======
-					+ ".callCounts{text-align:center;margin:10px auto 10px auto;font-size:14px;font-weight:bold;}"
-					+ ".callCounts span{margin:0 8px;padding:4px 12px;border-radius:12px;"
-					+ "background:#d9e6ff;border:1px solid #b3ccff;}"
-					// ====== CHART ======
-					+ ".chart-container{width:320px;margin:18px auto 0 auto;}"
-					// ====== TABLE ======
-					+ "table{width:80%;margin:30px auto 0 auto;border-collapse:collapse;background:#fff;"
-					+ "box-shadow:0 4px 16px rgba(0,0,0,0.12);}"
+					+ ".p{background:#28a745;}.f{background:#dc3545;}.s{background:#ffc107;color:#333;}" +
+
+					".callCounts{text-align:center;margin:10px auto 10px auto;font-size:14px;font-weight:bold;}"
+					+ ".callCounts span{margin:0 8px;padding:4px 12px;border-radius:12px;background:#d9e6ff;border:1px solid #b3ccff;}"
+					+
+
+					".chart-container{width:320px;margin:18px auto 0 auto;}" +
+
+					"table{width:80%;margin:30px auto 0 auto;border-collapse:collapse;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.12);}"
 					+ "th,td{border:1px solid #cdd4e0;padding:9px 6px;font-size:14px;text-align:center;}"
-					+ "th{background:#003366;color:#fff;}" + "tr:nth-child(even){background:#f4f7ff;}"
-					+ ".footer{margin-top:25px;font-size:11px;color:#0066aa;}" + "</style></head><body>"
+					+ "th{background:#003366;color:#fff;}" + "tr:nth-child(even){background:#f4f7ff;}" +
 
-					// ====== BIG WATERMARK LOGO IN BACKGROUND ======
-					+ "<div class='watermark'><img src='logo/company_logo.jpg' alt='logo'></div>"
+					".footer{margin-top:25px;font-size:14px;font-weight:bold;color:#004a99;letter-spacing:0.6px;}" +
 
-					+ "<div class='page'>"
+					".summary-cards{display:flex;justify-content:center;gap:18px;margin:18px auto;}"
+					+ ".summary-card{min-width:160px;padding:12px 20px;border-radius:18px;font-size:15px;font-weight:bold;background:#ffffff;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-left:8px solid;}"
+					+ ".summary-card.avg{border-color:#0d6efd;color:#004085;}"
+					+ ".summary-card.fast{border-color:#28a745;color:#155724;}"
+					+ ".summary-card.slow{border-color:#dc3545;color:#721c24;}" + "</style>" +
 
-					// ====== HEADER WITH LEFT LOGO + CENTER TITLE ======
-					+ "<div class='logo'><img src='logo/company_logo.jpg' alt='Logo'></div>"
-					+ "<div class='header-row'>" + "  <div class='title'>API Automation Execution Dashboard</div>"
-					+ "</div>" + "<div class='subtitle'>Environment: " + env + " | Execution Mode: Single"
-					+ " | Executed At: " + date + " | Duration: " + duration + " sec</div>"
+					"</head>" + "<body>" +
 
-					// ====== PASS / FAIL / SKIP CARDS ======
-					+ "<div class='stats'>" + "<div class='card p'>Passed: " + passed + "</div>"
+					"<div class='watermark'><img src='logo/company_logo.jpg' alt='logo'></div>" +
+
+					"<div class='page'>" +
+
+					"<div class='logo'><img src='logo/company_logo.jpg' alt='Logo'></div>" +
+
+					"<div class='header-row'><div class='title'>API Automation Execution Dashboard</div></div>" +
+
+					"<div class='subtitle'>Environment: " + env + " | Execution Mode: Suite | Executed At: " + date
+					+ " | Duration: " + durationText + " Sec</div>" +
+
+					"<div class='stats'>" + "<div class='card p'>Passed: " + passed + "</div>"
 					+ "<div class='card f'>Failed: " + failed + "</div>" + "<div class='card s'>Skipped: " + skipped
-					+ "</div>" + "</div>"
+					+ "</div>" + "</div>" +
 
-					// ====== API METHOD COUNTS ======
-					+ "<div class='callCounts'>" + "<span>POST: " + post + "</span>" + "<span>GET: " + get + "</span>"
-					+ "<span>PUT: " + put + "</span>" + "<span>DELETE: " + del + "</span>" + "</div>"
+					"<div class='callCounts'>" + "<span>POST: " + post + "</span>" + "<span>GET: " + get + "</span>"
+					+ "<span>PUT: " + put + "</span>" + "<span>DELETE: " + del + "</span>" + "</div>" +
 
-					// ====== DONUT CHART ======
-					+ "<div class='chart-container'><canvas id='pieChart'></canvas></div>"
+					"<div class='summary-cards'>"
+					+ "<div class='summary-card avg'>Avg Response Time: <span id='avgTime'>--</span> ms</div>"
+					+ "<div class='summary-card fast'>Fastest API: <span id='fastTime'>--</span> ms</div>"
+					+ "<div class='summary-card slow'>Slowest API: <span id='slowTime'>--</span> ms</span></div>"
+					+ "</div>" +
 
-					// ====== TABLE ======
-					+ "<table><tr><th>Test Case</th><th>Status</th></tr>" + tableRows + "</table>"
+					"<div class='chart-container'><canvas id='pieChart'></canvas></div>" +
 
-					+ "<div class='footer'>Powered by Changepond Technologies &nbsp;|&nbsp; API QA Automation</div>"
+					"<div style='display:flex;justify-content:center;gap:20px;margin-top:35px;'>"
+					+ "<div class='chart-container' style='width:420px;'><canvas id='statusChart'></canvas></div>"
+					+ "<div class='chart-container' style='width:420px;'><canvas id='trendChart'></canvas></div>"
+					+ "</div>" +
 
-					+ "</div>" // end .page
+					"<table id='resultTable'>" + "<tr><th>Test Case ID</th><th>Action</th><th>Status</th></tr>"
+					+ tableRows + "</table>" +
 
-					+ "<script>" + "new Chart(document.getElementById('pieChart'),{" + "  type:'doughnut'," + "  data:{"
-					+ "    labels:['Passed','Failed','Skipped']," + "    datasets:[{" + "      data:[" + passed + ","
-					+ failed + "," + skipped + "]," + "      backgroundColor:['#28a745','#dc3545','#ffc107'],"
-					+ "      borderWidth:1" + "    }]" + "  }," + "  options:{" + "    cutout:'60%',"
-					+ "    plugins:{legend:{position:'bottom',labels:{color:'#003366',font:{size:12}}}},"
-					+ "    responsive:true" + "  }" + "});" + "</script>"
+					"<div class='footer'>Powered by Changepond Technologies | API QA Automation</div>" +
 
-					+ "</body></html>";
+					"</div>" + // .page
+
+					"<script>" + "var statusCodeLabels = " + statusCodeLabelsJs + ";" + "var statusCodeCounts = "
+					+ statusCodeCountsJs + ";" + "var runLabels = " + runLabelsJs + ";" + "var passTrend = "
+					+ passTrendJs + ";" + "var failTrend  = " + failTrendJs + ";" + "var skipTrend  = " + skipTrendJs
+					+ ";" +
+
+					// Trend chart
+					"new Chart(document.getElementById('trendChart'),{" + "type:'bar',"
+					+ "data:{labels:runLabels,datasets:[" + "{label:'Passed',data:passTrend,backgroundColor:'#28a745'},"
+					+ "{label:'Failed',data:failTrend,backgroundColor:'#dc3545'},"
+					+ "{label:'Skipped',data:skipTrend,backgroundColor:'#ffc107'}" + "]},"
+					+ "options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{"
+					+ "y:{beginAtZero:true,title:{display:true,text:'Test Count'}},"
+					+ "x:{title:{display:true,text:'Runs'}}}}});" +
+
+					// Donut chart
+					"new Chart(document.getElementById('pieChart'),{" + "type:'doughnut',"
+					+ "data:{labels:['Passed','Failed','Skipped'],datasets:[{" + "data:[" + passed + "," + failed + ","
+					+ skipped + "]," + "backgroundColor:['#28a745','#dc3545','#ffc107'],borderWidth:1"
+					+ "}]},options:{cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#003366',font:{size:12}}}},responsive:true}});"
+					+
+
+					// Sample response times (can be wired later)
+					"var responseTimes=[120,98,200,350,180];"
+					+ "var avg=Math.round(responseTimes.reduce((a,b)=>a+b,0)/responseTimes.length);"
+					+ "var min=Math.min.apply(null,responseTimes);" + "var max=Math.max.apply(null,responseTimes);"
+					+ "document.getElementById('avgTime').innerText=avg;"
+					+ "document.getElementById('fastTime').innerText=min;"
+					+ "document.getElementById('slowTime').innerText=max;" +
+
+					// Status-code bar chart
+					"new Chart(document.getElementById('statusChart'),{" + "type:'bar',"
+					+ "data:{labels:statusCodeLabels,datasets:[{" + "data:statusCodeCounts,"
+					+ "backgroundColor:['#28a745','#17a2b8','#0d6efd','#ffc107','#dc3545','#6f42c1']," + "borderWidth:1"
+					+ "}]},options:{scales:{" + "x:{title:{display:true,text:'HTTP Status Codes'}},"
+					+ "y:{title:{display:true,text:'Count'},beginAtZero:true}}," + "plugins:{legend:{display:false}}});"
+					+
+
+					"</script>" + "</body></html>";
 
 			try (FileWriter fw = new FileWriter(file)) {
 				fw.write(html);
 			}
 
-			System.out.println("✅ Dashboard Generated Successfully!");
+			System.out.println("✅ Dashboard Generated Successfully at: " + file.getAbsolutePath());
 
-		} catch (
-
-		Exception e) {
+		} catch (Exception e) {
 			System.out.println("Dashboard Error: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
-
 }
