@@ -18,6 +18,7 @@ public class DataContext {
 	private String updatedEndpoint;
 	private String reportFilePath;
 	private String currentAction;
+	private String sheetName;
 
 	// *******************************************************************************************
 	// Below fields are declared to randomly generate values and reuse those values
@@ -149,6 +150,10 @@ public class DataContext {
 
 	public void setCurrentAction(String action) {
 		this.currentAction = action;
+	}
+
+	public String getSheetName() {
+		return sheetName;
 	}
 
 	//

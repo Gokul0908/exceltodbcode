@@ -166,6 +166,7 @@ public class DashboardReport implements IReporter {
 					if (sheet == null)
 						continue;
 
+					String sheetName = sheet.getSheetName();
 					Row headerRow = sheet.getRow(0);
 					if (headerRow == null)
 						continue;
@@ -255,7 +256,11 @@ public class DashboardReport implements IReporter {
 						}
 
 						// ----- HTML table row: caseID | action | status -----
-						tableRows.append("<tr>").append("<td>").append(caseId).append("</td>").append("<td>")
+						String displayCase = caseId;
+						if (sheetName != null && !sheetName.trim().isEmpty()) {
+							displayCase = caseId + " (" + sheetName + ")";
+						}
+						tableRows.append("<tr>").append("<td>").append(displayCase).append("</td>").append("<td>")
 								.append(action).append("</td>").append("<td style='font-weight:bold;color:")
 								.append(color).append(";'>").append(statusText).append("</td>").append("</tr>");
 					}
@@ -547,24 +552,21 @@ public class DashboardReport implements IReporter {
 																																	// here
 					+ ".page{position:relative;z-index:10;padding:20px 0 40px 0;text-align:center;}"
 
-					+ ".watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.08;z-index:0;pointer-events:none;animation:watermarkBreath 8s ease-in-out infinite;}" // 🖼️
-																																																	// Watermark
-																																																	// Opacity
-																																																	// +
-																																																	// Position
-																																																	// +
-																																																	// Animation
-																																																	// edit
-																																																	// here
-					+ ".watermark img{width:600px;height:auto;}" // 🖼️ Change watermark image size here
-					+ "@keyframes watermarkBreath{0%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.06);}100%{transform:translate(-50%,-50%) scale(1);}}" // 🌀
-																																																// Animation
-																																																// Speed
-																																																// change
-																																																// here
+					+ ".watermark {\r\n" + "    position: fixed;\r\n" + "    top: 50%;\r\n" + "    left: 0;\r\n"
+					+ "    transform: translateY(-50%);\r\n" + "    opacity: 0.10;\r\n" + "    z-index: 0;\r\n"
+					+ "    pointer-events: none;\r\n" + "    animation: slideWatermark 5s linear infinite;\r\n"
+					+ "}\r\n" + "\r\n" + ".watermark img {\r\n" + "    width: 650px;\r\n" + "    height: auto;\r\n"
+					+ "}\r\n" + "\r\n" + "@keyframes slideWatermark {\r\n"
+					+ "    0%   { transform: translateX(-50%) translateY(-50%); }\r\n"
+					+ "    50%  { transform: translateX(50%) translateY(-50%); }\r\n"
+					+ "    100% { transform: translateX(-50%) translateY(-50%); }\r\n" + "}\r\n" + "" + "" // 🌀
+																											// Animation
+																											// Speed
+																											// change
+																											// here
 
 					+ ".header-row{display:flex;align-items:center;justify-content:center;gap:25px;margin-bottom:10px;}"
-					+ ".logo{position:absolute;top:15px;left:25px;}" + ".logo img{height:150px;width:auto;}" // 🔰
+					+ ".logo{position:absolute;top:15px;left:25px;}" + ".logo img{height:150px;width:auto;}" // 🔰 //
 																												// Change
 																												// Company
 																												// Logo
@@ -643,9 +645,9 @@ public class DashboardReport implements IReporter {
 					+ "<div class='chart-container' style='width:350px;'><canvas id='pieChart'></canvas></div>" // Doughnut
 																												// chart
 																												// width
-					+ "<div class='chart-container' style='width:500px;'><canvas id='trendChart'></canvas></div>" // Bar
-																													// chart
-																													// width
+					+ "<div class='chart-container' style='width:600px;height:400px;'><canvas id='trendChart'></canvas></div>" // Bar
+					// chart
+					// width
 					+ "</div>"
 
 					// Shared Legend Style
@@ -666,12 +668,48 @@ public class DashboardReport implements IReporter {
 					+ "var failTrend=" + failTrendJs + ";" + "var skipTrend=" + skipTrendJs + ";"
 
 					// 📊 Trend Chart
-					+ "new Chart(document.getElementById('trendChart'),{type:'bar',data:{labels:runLabels,datasets:[{label:'Passed',data:passTrend,backgroundColor:'#28a745'},{label:'Failed',data:failTrend,backgroundColor:'#dc3545'},{label:'Skipped',data:skipTrend,backgroundColor:'#ffc107'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:'Test Count'}},x:{title:{display:true,text:'Runs'}}}}});"
-
+					+ "new Chart(document.getElementById('trendChart'),{\r\n" + "    type:'bar',\r\n" + "    data:{\r\n"
+					+ "        labels:runLabels,\r\n" + "        datasets:[\r\n"
+					+ "            {label:'Passed',data:passTrend,backgroundColor:'#28a745'},\r\n"
+					+ "            {label:'Failed',data:failTrend,backgroundColor:'#dc3545'},\r\n"
+					+ "            {label:'Skipped',data:skipTrend,backgroundColor:'#ffc107'}\r\n" + "        ]\r\n"
+					+ "    },\r\n" + "    options:{\r\n" + "        responsive:true,\r\n"
+					+ "        maintainAspectRatio:false,\r\n" + "        animation:{\r\n"
+					+ "            duration:3456,\r\n" + "            easing:'easeOutBounce'\r\n" + "        },\r\n"
+					+ "        plugins:{legend:{display:false}},\r\n" + "        scales:{\r\n" + "            y:{\r\n"
+					+ "                beginAtZero:true,\r\n" + "                ticks:{\r\n"
+					+ "                    stepSize:1,\r\n" + "                    precision:0\r\n"
+					+ "                },\r\n"
+					+ "                suggestedMax:Math.max(...passTrend, ...failTrend, ...skipTrend)+1,\r\n"
+					+ "                title:{display:true,text:'Test Count'}\r\n" + "            },\r\n"
+					+ "            x:{title:{display:true,text:'Runs'}}\r\n" + "        }\r\n" + "    }\r\n" + "});\r\n"
+					+ "" + "" + ""
 					// 🥯 Doughnut Chart
-					+ "new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:['Passed','Failed','Skipped'],datasets:[{data:["
-					+ passed + "," + failed + "," + skipped
-					+ "],backgroundColor:['#28a745','#dc3545','#ffc107'],borderWidth:1}]},options:{cutout:'60%',responsive:true,plugins:{legend:{display:false}}}});"
+					+ "new Chart(document.getElementById('pieChart'), {"
+					+ "  type: 'doughnut',"
+					+ "  data: {"
+					+ "    labels: ['Passed','Failed','Skipped'],"
+					+ "    datasets: [{"
+					+ "      data: [" + passed + "," + failed + "," + skipped + "],"
+					+ "      backgroundColor: ['#28a745', '#dc3545', '#ffc107'],"
+					+ "      borderWidth: 1"
+					+ "    }]"
+					+ "  },"
+					+ "  options: {"
+					+ "    cutout: '60%',"
+					+ "    responsive: true,"
+					+ "    animation: {"
+					+ "      animateRotate: true,"
+					+ "      animateScale: true,"
+					+ "      duration: 2000,"
+					+ "      easing: 'easeOutElastic',"
+					+ "      delay: 300"
+					+ "    },"
+					+ "    plugins: {"
+					+ "      legend: { display: false }"
+					+ "    }"
+					+ "  }"
+					+ "});"
 
 					// 📌 Response Time Summary Update
 					+ "var rt=" + responseTimesJs + ";"
