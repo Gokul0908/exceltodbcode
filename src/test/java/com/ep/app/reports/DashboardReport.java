@@ -29,6 +29,12 @@ import org.testng.xml.XmlSuite;
 
 public class DashboardReport implements IReporter {
 
+	// Example response time list (you already have this)
+	List<Integer> responseTimes = Arrays.asList(120, 98, 200, 350, 180);
+
+	// Convert into JS-valid array string ➝ [120,98,200,350,180]
+	String responseTimesJs = responseTimes.toString();
+
 	// ---------- Holder for latest Excel summary ----------
 	private static class ExcelSummary {
 		int passed;
@@ -44,6 +50,7 @@ public class DashboardReport implements IReporter {
 		String statusCodeLabelsJs; // e.g. ['200','201','404']
 		String statusCodeCountsJs; // e.g. [5,2,1]
 		String sourceFile;
+
 	}
 
 	// ---------- Holder for 1 run (used in trend chart) ----------
@@ -528,43 +535,52 @@ public class DashboardReport implements IReporter {
 
 			String durationText = (durationSec > 0) ? String.valueOf(durationSec) : "--";
 
-			String html = "<!DOCTYPE html>" + "<html lang=\"en\">" + "<head>" + "<meta charset=\"UTF-8\">"
+			String html = "<!DOCTYPE html>" + "<html lang='en'>" + "<head>" + "<meta charset='UTF-8'>"
 					+ "<title>API Automation Execution Dashboard</title>"
-					+ "<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>"
+					+ "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>" +
 
-					+ "<style>"
+					"<style>"
 					+ "body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#e6f2ff;position:relative;color:#003366;}"
 					+ ".page{position:relative;z-index:10;padding:20px 0 40px 0;text-align:center;}"
-					+ ".watermark{position:fixed;top:50%;left:0;transform:translateY(-50%);opacity:0.15;width:100%;height:100%;background:url('logo/Watermark.png') center/40% no-repeat;animation:slideWatermark 10s linear infinite;z-index:0;pointer-events:none;}"
-					+ "@keyframes slideWatermark{0%{transform:translate(-50%,-50%);}50%{transform:translate(50%,-50%);}100%{transform:translate(-50%,-50%);}}"
-					+ ".header-row{display:flex;align-items:center;justify-content:center;gap:25px;margin-bottom:10px;}"
+					+ ".watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.08;z-index:0;pointer-events:none;animation:watermarkBreath 8s ease-in-out infinite;}"
+					+ ".watermark img{width:600px;height:auto;}"
+					+ "@keyframes watermarkBreath{0%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.06);}100%{transform:translate(-50%,-50%) scale(1);}}"
+					+
+
+					".header-row{display:flex;align-items:center;justify-content:center;gap:25px;margin-bottom:10px;}"
 					+ ".logo{position:absolute;top:15px;left:25px;}" + ".logo img{height:150px;width:auto;}"
 					+ ".title{font-size:28px;font-weight:bold;color:#002b5c;}"
-					+ ".subtitle{font-size:13px;color:#00509e;margin-top:4px;}"
-					+ ".stats{display:flex;justify-content:center;gap:18px;margin:22px auto 8px auto;}"
+					+ ".subtitle{font-size:13px;color:#00509e;margin-top:4px;}" +
+
+					".stats{display:flex;justify-content:center;gap:18px;margin:22px auto 8px auto;}"
 					+ ".card{min-width:140px;padding:12px 22px;border-radius:24px;font-size:16px;font-weight:bold;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.15);background:#999;transition:0.3s;}"
 					+ ".card:hover{transform:scale(1.06);box-shadow:0 6px 16px rgba(0,0,0,0.25);}"
-					+ ".p{background:#28a745;}.f{background:#dc3545;}.s{background:#ffc107;color:#333;}"
-					+ ".callCounts{text-align:center;margin:10px auto;font-size:14px;font-weight:bold;}"
+					+ ".p{background:#28a745;}" + ".f{background:#dc3545;}" + ".s{background:#ffc107;color:#333;}" +
+
+					".callCounts{text-align:center;margin:10px auto;font-size:14px;font-weight:bold;}"
 					+ ".callCounts span{margin:0 8px;padding:4px 12px;border-radius:12px;background:#d9e6ff;border:1px solid #b3ccff;}"
-					+ ".chart-container{width:320px;margin:18px auto 0 auto;}"
-					+ "table{width:80%;margin:30px auto 0 auto;border-collapse:collapse;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.12);}"
+					+
+
+					".chart-container{margin:10px auto;}" +
+
+					"table{width:80%;margin:30px auto 0 auto;border-collapse:collapse;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.12);}"
 					+ "th,td{border:1px solid #cdd4e0;padding:9px 6px;font-size:14px;text-align:center;}"
-					+ "th{background:#003366;color:#fff;}" + "tr:nth-child(even){background:#f4f7ff;}"
-					+ ".footer{margin-top:25px;font-size:14px;font-weight:bold;color:#004a99;letter-spacing:0.6px;}"
-					+ ".summary-cards{display:flex;justify-content:center;gap:18px;margin:18px auto;}"
+					+ "th{background:#003366;color:#fff;}" + "tr:nth-child(even){background:#f4f7ff;}" +
+
+					".footer{margin-top:25px;font-size:14px;font-weight:bold;color:#004a99;letter-spacing:0.6px;}" +
+
+					".summary-cards{display:flex;justify-content:center;gap:18px;margin:18px auto;}"
 					+ ".summary-card{min-width:160px;padding:12px 20px;border-radius:18px;font-size:15px;font-weight:bold;background:#ffffff;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-left:8px solid;}"
 					+ ".summary-card.avg{border-color:#0d6efd;color:#004085;}"
 					+ ".summary-card.fast{border-color:#28a745;color:#155724;}"
-					+ ".summary-card.slow{border-color:#dc3545;color:#721c24;}" + "</style>"
+					+ ".summary-card.slow{border-color:#dc3545;color:#721c24;}" + "</style>" +
 
-					+ "</head>" + "<body>"
+					"</head><body>" +
 
-					+ "<div class=\"watermark\"><img src=\"logo/company_logo.jpg\" alt=\"logo\"></div>"
+					"<div class='watermark'><img src='logo/Watermark.png' alt='logo'></div>" +
 
-					+ "<div class=\"page\">"
-					+ "<div class=\"logo\"><img src=\"logo/company_logo.jpg\" alt=\"Logo\"></div>"
-					+ "<div class=\"header-row\"><div class=\"title\">API Automation Execution Dashboard</div></div>" +
+					"<div class='page'>" + "<div class='logo'><img src='logo/company_logo.jpg' alt='Logo'></div>"
+					+ "<div class='header-row'><div class='title'>API Automation Execution Dashboard</div></div>" +
 
 					"<div class='subtitle'>Environment: " + env + " | Execution Mode: Suite | Executed At: " + date
 					+ " | Duration: " + durationText + " Sec</div>" +
@@ -579,59 +595,45 @@ public class DashboardReport implements IReporter {
 					"<div class='summary-cards'>"
 					+ "<div class='summary-card avg'>Avg Response Time: <span id='avgTime'>--</span> ms</div>"
 					+ "<div class='summary-card fast'>Fastest API: <span id='fastTime'>--</span> ms</div>"
-					+ "<div class='summary-card slow'>Slowest API: <span id='slowTime'>--</span> ms</span></div>"
-					+ "</div>"
+					+ "<div class='summary-card slow'>Slowest API: <span id='slowTime'>--</span> ms</div>" + "</div>" +
 
-					+ "<div class='chart-container'><canvas id='pieChart'></canvas></div>"
-
-					+ "<div style='display:flex;justify-content:center;gap:20px;margin-top:35px;'>"
-					+ "<div class='chart-container' style='width:420px;'><canvas id='statusChart'></canvas></div>"
-					+ "<div class='chart-container' style='width:420px;'><canvas id='trendChart'></canvas></div>"
+					"<div style='display:flex;justify-content:center;align-items:flex-start;gap:60px;margin-top:35px;'>"
+					+ "<div class='chart-container' style='width:350px;'><canvas id='pieChart'></canvas></div>"
+					+ "<div class='chart-container' style='width:500px;'><canvas id='trendChart'></canvas></div>"
 					+ "</div>" +
 
+					"<div style='text-align:center;margin-top:12px;font-weight:bold;'>"
+					+ "<span style='color:#28a745;margin:0 15px;'>■ Passed</span>"
+					+ "<span style='color:#dc3545;margin:0 15px;'>■ Failed</span>"
+					+ "<span style='color:#ffc107;margin:0 15px;'>■ Skipped</span>" + "</div>" +
+
 					"<table id='resultTable'>" + "<tr><th>Test Case ID</th><th>Action</th><th>Status</th></tr>"
-					+ tableRows + "</table>"
+					+ tableRows + "</table>" +
 
-					+ "<div class=\"footer\">Powered by Changepond Technologies | API QA Automation</div>" + "</div>" +
+					"<div class='footer'>Powered by Changepond Technologies | API QA Automation</div>" + "</div>" +
 
-					"<script>" + "var statusCodeLabels = " + statusCodeLabelsJs + ";" + "var statusCodeCounts = "
-					+ statusCodeCountsJs + ";" + "var runLabels = " + runLabelsJs + ";" + "var passTrend = "
-					+ passTrendJs + ";" + "var failTrend  = " + failTrendJs + ";" + "var skipTrend  = " + skipTrendJs
-					+ ";"
+					"<script>" + "var runLabels=" + runLabelsJs + ";" + "var passTrend=" + passTrendJs + ";"
+					+ "var failTrend=" + failTrendJs + ";" + "var skipTrend=" + skipTrendJs + ";" +
 
-					// Trend chart
-					+ "new Chart(document.getElementById('trendChart'),{" + "type:'bar',"
+					"new Chart(document.getElementById('trendChart'),{" + "type:'bar',"
 					+ "data:{labels:runLabels,datasets:[" + "{label:'Passed',data:passTrend,backgroundColor:'#28a745'},"
 					+ "{label:'Failed',data:failTrend,backgroundColor:'#dc3545'},"
 					+ "{label:'Skipped',data:skipTrend,backgroundColor:'#ffc107'}" + "]},"
-					+ "options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{"
-					+ "y:{beginAtZero:true,title:{display:true,text:'Test Count'}},"
-					+ "x:{title:{display:true,text:'Runs'}}}}});"
+					+ "options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:'Test Count'}},x:{title:{display:true,text:'Runs'}}}}"
+					+ "});" +
 
-					// Donut chart
-					+ "new Chart(document.getElementById('pieChart'),{" + "type:'doughnut',"
-					+ "data:{labels:['Passed','Failed','Skipped'],datasets:[{" + "data:[" + passed + "," + failed + ","
-					+ skipped + "]," + "backgroundColor:['#28a745','#dc3545','#ffc107'],borderWidth:1"
-					+ "}]},options:{cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#003366',font:{size:12}}}},responsive:true}});"
+					"new Chart(document.getElementById('pieChart'),{" + "type:'doughnut',"
+					+ "data:{labels:['Passed','Failed','Skipped'],datasets:[{data:[" + passed + "," + failed + ","
+					+ skipped
+					+ "],backgroundColor:['#28a745','#dc3545','#ffc107'],borderWidth:1}]},options:{cutout:'60%',responsive:true,plugins:{legend:{display:false}}}"
+					+ "});" +
 
-					// Sample response times (can be wired later)
-					+ "var responseTimes=[120,98,200,350,180];"
-					+ "var avg=Math.round(responseTimes.reduce((a,b)=>a+b,0)/responseTimes.length);"
-					+ "var min=Math.min.apply(null,responseTimes);" + "var max=Math.max.apply(null,responseTimes);"
-					+ "document.getElementById('avgTime').innerText=avg;"
-					+ "document.getElementById('fastTime').innerText=min;"
-					+ "document.getElementById('slowTime').innerText=max;"
-//
-//					// Status-code bar chart
-//					+ "new Chart(document.getElementById('statusChart'),{" + "type:'bar',"
-//					+ "data:{labels:statusCodeLabels,datasets:[{" + "data:statusCodeCounts,"
-//					+ "backgroundColor:['#28a745','#17a2b8','#0d6efd','#ffc107','#dc3545','#6f42c1']," + "borderWidth:1"
-//					+ "}]},options:{scales:{" + "x:{title:{display:true,text:'HTTP Status Codes'}},"
-//					+ "y:{title:{display:true,text:'Count'},beginAtZero:true}}," + "plugins:{legend:{display:false}}});"
+					"var rt=" + responseTimesJs + ";" + // <-- Make sure to set this variable
+					"document.getElementById('avgTime').innerText=Math.round(rt.reduce((a,b)=>a+b,0)/rt.length);"
+					+ "document.getElementById('fastTime').innerText=Math.min(...rt);"
+					+ "document.getElementById('slowTime').innerText=Math.max(...rt);" +
 
-					+ "</script>"
-
-					+ "</body>" + "</html>";
+					"</script>" + "</body></html>";
 
 			try (FileWriter fw = new FileWriter(file)) {
 				fw.write(html);
