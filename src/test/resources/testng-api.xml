@@ -13,8 +13,8 @@
       </class>
     </classes>
   </test>
-  <test name="testPOSTRequest_TC001">
-    <parameter name="caseID" value="TC001"/>
+  <test name="testPOSTRequest_TC004">
+    <parameter name="caseID" value="TC004"/>
     <classes>
       <class name="com.ep.app.tests.APIMethods">
         <methods>

@@ -384,78 +384,66 @@ public class DashboardReport implements IReporter {
 	}
 
 	private RunSummary summarizeReportFile(File reportFile) {
-		try (FileInputStream fis = new FileInputStream(reportFile); Workbook workbook = WorkbookFactory.create(fis)) {
+	    try (FileInputStream fis = new FileInputStream(reportFile);
+	         Workbook workbook = WorkbookFactory.create(fis)) {
 
-			Sheet sheet = workbook.getSheet("chainingRequests");
-			if (sheet == null && workbook.getNumberOfSheets() > 0) {
-				sheet = workbook.getSheetAt(0);
-			}
-			if (sheet == null)
-				return null;
+	        int passed = 0, failed = 0, skipped = 0;
 
-			Row headerRow = sheet.getRow(0);
-			if (headerRow == null)
-				return null;
+	        for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
+	            Sheet sheet = workbook.getSheetAt(s);
+	            if (sheet == null) continue;
 
-			int colIsRun = -1;
-			int colStatusCode = -1;
+	            Row headerRow = sheet.getRow(0);
+	            if (headerRow == null) continue;
 
-			for (int c = 0; c < headerRow.getLastCellNum(); c++) {
-				Cell cell = headerRow.getCell(c);
-				String h = getStringCell(cell);
-				if (h.equalsIgnoreCase("isRun")) {
-					colIsRun = c;
-				} else if (h.equalsIgnoreCase("statusCode")) {
-					colStatusCode = c;
-				}
-			}
+	            int colIsRun = -1;
+	            int colStatusCode = -1;
 
-			if (colStatusCode == -1)
-				return null;
+	            for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+	                Cell cell = headerRow.getCell(c);
+	                String header = getStringCell(cell);
+	                if (header.equalsIgnoreCase("isRun")) colIsRun = c;
+	                if (header.equalsIgnoreCase("statusCode")) colStatusCode = c;
+	            }
 
-			int passed = 0, failed = 0, skipped = 0;
+	            if (colStatusCode == -1) continue; // Skip sheets without statusCode
 
-			for (int r = 1; r <= sheet.getLastRowNum(); r++) {
-				Row row = sheet.getRow(r);
-				if (row == null)
-					continue;
+	            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+	                Row row = sheet.getRow(r);
+	                if (row == null) continue;
 
-				if (colIsRun != -1) {
-					String runVal = getStringCell(row.getCell(colIsRun));
-					if (!"yes".equalsIgnoreCase(runVal)) {
-						continue;
-					}
-				}
+	                if (colIsRun != -1) {
+	                    String runVal = getStringCell(row.getCell(colIsRun));
+	                    if (!"yes".equalsIgnoreCase(runVal)) continue;
+	                }
 
-				String scStr = getStringCell(row.getCell(colStatusCode));
-				if (scStr == null || scStr.trim().isEmpty()) {
-					skipped++;
-					continue;
-				}
+	                String scStr = getStringCell(row.getCell(colStatusCode));
+	                if (scStr == null || scStr.trim().isEmpty()) {
+	                    skipped++;
+	                    continue;
+	                }
 
-				int code;
-				try {
-					code = (int) Double.parseDouble(scStr.trim());
-				} catch (Exception e) {
-					skipped++;
-					continue;
-				}
+	                try {
+	                    int code = (int) Double.parseDouble(scStr.trim());
+	                    if (code >= 200 && code < 300) passed++;
+	                    else failed++;
+	                } catch (Exception e) {
+	                    skipped++;
+	                }
+	            }
+	        }
 
-				if (code >= 200 && code < 300)
-					passed++;
-				else
-					failed++;
-			}
+	        String label = reportFile.getParentFile().getName() + "-"
+	                + reportFile.getName().replace(".xlsx", "");
 
-			String label = reportFile.getParentFile().getName() + "-" + reportFile.getName().replace(".xlsx", "");
+	        return new RunSummary(label, passed, failed, skipped);
 
-			return new RunSummary(label, passed, failed, skipped);
-
-		} catch (Exception e) {
-			System.out.println("⚠ Error summarizing report: " + reportFile.getAbsolutePath());
-			return null;
-		}
+	    } catch (Exception e) {
+	        System.out.println("⚠ Error summarizing report: " + reportFile.getAbsolutePath());
+	        return null;
+	    }
 	}
+
 
 	// ======================================================
 	// Cell → String helper
@@ -681,8 +669,8 @@ public class DashboardReport implements IReporter {
 					+ "                    stepSize:1,\r\n" + "                    precision:0\r\n"
 					+ "                },\r\n"
 					+ "                suggestedMax:Math.max(...passTrend, ...failTrend, ...skipTrend)+1,\r\n"
-					+ "                title:{display:true,text:'Test Count'}\r\n" + "            },\r\n"
-					+ "            x:{title:{display:true,text:'Runs'}}\r\n" + "        }\r\n" + "    }\r\n" + "});\r\n"
+					+ "                title:{display:true,text:'Test Case Count'}\r\n" + "            },\r\n"
+					+ "            x:{title:{display:true,text:'Last 5 Runs ----->'}}\r\n" + "        }\r\n" + "    }\r\n" + "});\r\n"
 					+ "" + "" + ""
 					// 🥯 Doughnut Chart
 					+ "new Chart(document.getElementById('pieChart'), {"

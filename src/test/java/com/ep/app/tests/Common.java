@@ -13,8 +13,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import javax.net.ssl.SSLContext;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -37,6 +42,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import io.restassured.RestAssured;
+import io.restassured.config.HttpClientConfig;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
@@ -199,6 +205,9 @@ public class Common {
 	}
 
 	public void makeRequest(String method, String caseID, String sheet) {
+
+		RestAssured.useRelaxedHTTPSValidation();
+		RestAssured.config = RestAssured.config().httpClient(HttpClientConfig.httpClientConfig());
 
 		Map<String, String> data = getTestData(caseID, sheet);
 
