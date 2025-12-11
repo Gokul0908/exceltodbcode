@@ -384,66 +384,72 @@ public class DashboardReport implements IReporter {
 	}
 
 	private RunSummary summarizeReportFile(File reportFile) {
-	    try (FileInputStream fis = new FileInputStream(reportFile);
-	         Workbook workbook = WorkbookFactory.create(fis)) {
+		try (FileInputStream fis = new FileInputStream(reportFile); Workbook workbook = WorkbookFactory.create(fis)) {
 
-	        int passed = 0, failed = 0, skipped = 0;
+			int passed = 0, failed = 0, skipped = 0;
 
-	        for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
-	            Sheet sheet = workbook.getSheetAt(s);
-	            if (sheet == null) continue;
+			for (int s = 0; s < workbook.getNumberOfSheets(); s++) {
+				Sheet sheet = workbook.getSheetAt(s);
+				if (sheet == null)
+					continue;
 
-	            Row headerRow = sheet.getRow(0);
-	            if (headerRow == null) continue;
+				Row headerRow = sheet.getRow(0);
+				if (headerRow == null)
+					continue;
 
-	            int colIsRun = -1;
-	            int colStatusCode = -1;
+				int colIsRun = -1;
+				int colStatusCode = -1;
 
-	            for (int c = 0; c < headerRow.getLastCellNum(); c++) {
-	                Cell cell = headerRow.getCell(c);
-	                String header = getStringCell(cell);
-	                if (header.equalsIgnoreCase("isRun")) colIsRun = c;
-	                if (header.equalsIgnoreCase("statusCode")) colStatusCode = c;
-	            }
+				for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+					Cell cell = headerRow.getCell(c);
+					String header = getStringCell(cell);
+					if (header.equalsIgnoreCase("isRun"))
+						colIsRun = c;
+					if (header.equalsIgnoreCase("statusCode"))
+						colStatusCode = c;
+				}
 
-	            if (colStatusCode == -1) continue; // Skip sheets without statusCode
+				if (colStatusCode == -1)
+					continue; // Skip sheets without statusCode
 
-	            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
-	                Row row = sheet.getRow(r);
-	                if (row == null) continue;
+				for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+					Row row = sheet.getRow(r);
+					if (row == null)
+						continue;
 
-	                if (colIsRun != -1) {
-	                    String runVal = getStringCell(row.getCell(colIsRun));
-	                    if (!"yes".equalsIgnoreCase(runVal)) continue;
-	                }
+					if (colIsRun != -1) {
+						String runVal = getStringCell(row.getCell(colIsRun));
+						if (!"yes".equalsIgnoreCase(runVal))
+							continue;
+					}
 
-	                String scStr = getStringCell(row.getCell(colStatusCode));
-	                if (scStr == null || scStr.trim().isEmpty()) {
-	                    skipped++;
-	                    continue;
-	                }
+					String scStr = getStringCell(row.getCell(colStatusCode));
+					if (scStr == null || scStr.trim().isEmpty()) {
+						skipped++;
+						continue;
+					}
 
-	                try {
-	                    int code = (int) Double.parseDouble(scStr.trim());
-	                    if (code >= 200 && code < 300) passed++;
-	                    else failed++;
-	                } catch (Exception e) {
-	                    skipped++;
-	                }
-	            }
-	        }
+					try {
+						int code = (int) Double.parseDouble(scStr.trim());
+						if (code >= 200 && code < 300)
+							passed++;
+						else
+							failed++;
+					} catch (Exception e) {
+						skipped++;
+					}
+				}
+			}
 
-	        String label = reportFile.getParentFile().getName() + "-"
-	                + reportFile.getName().replace(".xlsx", "");
+			String label = reportFile.getParentFile().getName() + "-" + reportFile.getName().replace(".xlsx", "");
 
-	        return new RunSummary(label, passed, failed, skipped);
+			return new RunSummary(label, passed, failed, skipped);
 
-	    } catch (Exception e) {
-	        System.out.println("⚠ Error summarizing report: " + reportFile.getAbsolutePath());
-	        return null;
-	    }
+		} catch (Exception e) {
+			System.out.println("⚠ Error summarizing report: " + reportFile.getAbsolutePath());
+			return null;
+		}
 	}
-
 
 	// ======================================================
 	// Cell → String helper
@@ -657,7 +663,7 @@ public class DashboardReport implements IReporter {
 
 					// 📊 Trend Chart
 					+ "new Chart(document.getElementById('trendChart'),{\r\n" + "    type:'bar',\r\n" + "    data:{\r\n"
-					+ "        labels:runLabels,\r\n" + "        datasets:[\r\n"
+					+ "        labels: ['Run 1', 'Run 2', 'Run 3', 'Run 4', 'Run 5'],\r\n" + "        datasets:[\r\n"
 					+ "            {label:'Passed',data:passTrend,backgroundColor:'#28a745'},\r\n"
 					+ "            {label:'Failed',data:failTrend,backgroundColor:'#dc3545'},\r\n"
 					+ "            {label:'Skipped',data:skipTrend,backgroundColor:'#ffc107'}\r\n" + "        ]\r\n"
@@ -670,34 +676,17 @@ public class DashboardReport implements IReporter {
 					+ "                },\r\n"
 					+ "                suggestedMax:Math.max(...passTrend, ...failTrend, ...skipTrend)+1,\r\n"
 					+ "                title:{display:true,text:'Test Case Count'}\r\n" + "            },\r\n"
-					+ "            x:{title:{display:true,text:'Last 5 Runs ----->'}}\r\n" + "        }\r\n" + "    }\r\n" + "});\r\n"
-					+ "" + "" + ""
+					+ "            x:{title:{display:true,text:'Last 5 Runs ----->'}}\r\n" + "        }\r\n"
+					+ "    }\r\n" + "});\r\n" + "" + "" + ""
 					// 🥯 Doughnut Chart
-					+ "new Chart(document.getElementById('pieChart'), {"
-					+ "  type: 'doughnut',"
-					+ "  data: {"
-					+ "    labels: ['Passed','Failed','Skipped'],"
-					+ "    datasets: [{"
-					+ "      data: [" + passed + "," + failed + "," + skipped + "],"
-					+ "      backgroundColor: ['#28a745', '#dc3545', '#ffc107'],"
-					+ "      borderWidth: 1"
-					+ "    }]"
-					+ "  },"
-					+ "  options: {"
-					+ "    cutout: '60%',"
-					+ "    responsive: true,"
-					+ "    animation: {"
-					+ "      animateRotate: true,"
-					+ "      animateScale: true,"
-					+ "      duration: 2000,"
-					+ "      easing: 'easeOutElastic',"
-					+ "      delay: 300"
-					+ "    },"
-					+ "    plugins: {"
-					+ "      legend: { display: false }"
-					+ "    }"
-					+ "  }"
-					+ "});"
+					+ "new Chart(document.getElementById('pieChart'), {" + "  type: 'doughnut'," + "  data: {"
+					+ "    labels: ['Passed','Failed','Skipped']," + "    datasets: [{" + "      data: [" + passed + ","
+					+ failed + "," + skipped + "]," + "      backgroundColor: ['#28a745', '#dc3545', '#ffc107'],"
+					+ "      borderWidth: 1" + "    }]" + "  }," + "  options: {" + "    cutout: '60%',"
+					+ "    responsive: true," + "    animation: {" + "      animateRotate: true,"
+					+ "      animateScale: true," + "      duration: 2000," + "      easing: 'easeOutElastic',"
+					+ "      delay: 300" + "    }," + "    plugins: {" + "      legend: { display: false }" + "    }"
+					+ "  }" + "});"
 
 					// 📌 Response Time Summary Update
 					+ "var rt=" + responseTimesJs + ";"

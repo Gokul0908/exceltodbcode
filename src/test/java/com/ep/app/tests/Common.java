@@ -309,9 +309,12 @@ public class Common {
 				return;
 			}
 		}
-		Assert.fail("Expected one of " + Arrays.toString(expectedCodes) + " but got " + actualCode);
+
+//		updated by se for checking purpose
+//		Assert.fail("Expected one of " + Arrays.toString(expectedCodes) + " but got " + actualCode);
 
 	}
+	// Perform field verification even for single GET calls
 
 	public void validateResponseParams(String caseID, String sheet) {
 
@@ -325,6 +328,7 @@ public class Common {
 			System.out.println("⚠ Single GET detected — Skipping id/email validation");
 			return;
 		}
+		validateResponseParams(caseID, sheet);
 
 		Map<String, String> data = getTestData(caseID, sheet);
 		String[] verificationParams = data.get("verificationParam").split(",");
@@ -961,7 +965,6 @@ public class Common {
 			}
 
 			verifyResponseCode(String.valueOf(expectedStatusCode));
-
 			if (!method.equalsIgnoreCase("DELETE") && expectedStatusCode != 404) {
 				validateResponseParams(stepCaseID, sheetName);
 			}

@@ -4,8 +4,8 @@
   <listeners>
     <listener class-name="com.ep.app.utils.TestListener"/>
   </listeners>
-  <test thread-count="5" name="testGETRequest_TC001(failed)">
-    <parameter name="caseID" value="TC001"/>
+  <test thread-count="5" name="testGETRequest_TC008(failed)">
+    <parameter name="caseID" value="TC008"/>
     <classes>
       <class name="com.ep.app.tests.APIMethods">
         <methods>
@@ -13,5 +13,5 @@
         </methods>
       </class> <!-- com.ep.app.tests.APIMethods -->
     </classes>
-  </test> <!-- testGETRequest_TC001(failed) -->
+  </test> <!-- testGETRequest_TC008(failed) -->
 </suite> <!-- Failed suite [DynamicSuite] -->
