@@ -1,17 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Failed suite [ChainingSuite]">
+<suite name="Failed suite [DynamicSuite]">
   <listeners>
     <listener class-name="com.ep.app.utils.TestListener"/>
   </listeners>
-  <test thread-count="5" name="Chaining_TC008.3(failed)">
-    <parameter name="chainCaseID" value="TC008.3"/>
+  <test thread-count="5" name="API_TC001(failed)">
+    <parameter name="caseID" value="TC001"/>
     <classes>
-      <class name="com.ep.app.tests.ChainingTest">
+      <class name="com.ep.app.tests.APIMethods">
         <methods>
-          <include name="testChainingRequest" invocation-numbers="0"/>
+          <include name="runApi"/>
         </methods>
-      </class> <!-- com.ep.app.tests.ChainingTest -->
+      </class> <!-- com.ep.app.tests.APIMethods -->
     </classes>
-  </test> <!-- Chaining_TC008.3(failed) -->
-</suite> <!-- Failed suite [ChainingSuite] -->
+  </test> <!-- API_TC001(failed) -->
+  <test thread-count="5" name="API_TC002(failed)">
+    <parameter name="caseID" value="TC002"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- API_TC002(failed) -->
+</suite> <!-- Failed suite [DynamicSuite] -->

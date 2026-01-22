@@ -16,6 +16,10 @@
 		<azure.keyvault.version>4.9.2</azure.keyvault.version>
 		<maven.compiler.version>3.13.0</maven.compiler.version>
 		<maven.surefire.version>3.0.0</maven.surefire.version>
+		
+		<java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 	</properties>
 	<dependencies>
 		<!--  TestNG  -->
@@ -50,6 +54,7 @@
 			<artifactId>rest-assured</artifactId>
 			<version>3.3.0</version>
 		</dependency>
+
 		<!--  JSON Schema Validator  -->
 		<dependency>
 			<groupId>io.rest-assured</groupId>
@@ -99,6 +104,16 @@
 			<artifactId>test-framework</artifactId>
 			<version>${test.framework.version}</version>
 		</dependency>
+
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.33</version>
+		</dependency>
+
+		
+
 	</dependencies>
 	<build>
 		<plugins>

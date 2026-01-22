@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [SwaggerSuite]" guice-stage="DEVELOPMENT">
+  <test thread-count="5" name="SWG_1(failed)">
+    <parameter name="caseID" value="SWG_1"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_1(failed) -->
+  <test thread-count="5" name="SWG_2(failed)">
+    <parameter name="caseID" value="SWG_2"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_2(failed) -->
+  <test thread-count="5" name="SWG_3(failed)">
+    <parameter name="caseID" value="SWG_3"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_3(failed) -->
+  <test thread-count="5" name="SWG_4(failed)">
+    <parameter name="caseID" value="SWG_4"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_4(failed) -->
+  <test thread-count="5" name="SWG_5(failed)">
+    <parameter name="caseID" value="SWG_5"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_5(failed) -->
+  <test thread-count="5" name="SWG_6(failed)">
+    <parameter name="caseID" value="SWG_6"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_6(failed) -->
+  <test thread-count="5" name="SWG_7(failed)">
+    <parameter name="caseID" value="SWG_7"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_7(failed) -->
+  <test thread-count="5" name="SWG_8(failed)">
+    <parameter name="caseID" value="SWG_8"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_8(failed) -->
+  <test thread-count="5" name="SWG_9(failed)">
+    <parameter name="caseID" value="SWG_9"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_9(failed) -->
+  <test thread-count="5" name="SWG_10(failed)">
+    <parameter name="caseID" value="SWG_10"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_10(failed) -->
+  <test thread-count="5" name="SWG_11(failed)">
+    <parameter name="caseID" value="SWG_11"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_11(failed) -->
+  <test thread-count="5" name="SWG_12(failed)">
+    <parameter name="caseID" value="SWG_12"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_12(failed) -->
+  <test thread-count="5" name="SWG_13(failed)">
+    <parameter name="caseID" value="SWG_13"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_13(failed) -->
+  <test thread-count="5" name="SWG_14(failed)">
+    <parameter name="caseID" value="SWG_14"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_14(failed) -->
+  <test thread-count="5" name="SWG_15(failed)">
+    <parameter name="caseID" value="SWG_15"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_15(failed) -->
+  <test thread-count="5" name="SWG_16(failed)">
+    <parameter name="caseID" value="SWG_16"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_16(failed) -->
+  <test thread-count="5" name="SWG_17(failed)">
+    <parameter name="caseID" value="SWG_17"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_17(failed) -->
+  <test thread-count="5" name="SWG_18(failed)">
+    <parameter name="caseID" value="SWG_18"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_18(failed) -->
+  <test thread-count="5" name="SWG_19(failed)">
+    <parameter name="caseID" value="SWG_19"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_19(failed) -->
+  <test thread-count="5" name="SWG_20(failed)">
+    <parameter name="caseID" value="SWG_20"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_20(failed) -->
+  <test thread-count="5" name="SWG_21(failed)">
+    <parameter name="caseID" value="SWG_21"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_21(failed) -->
+  <test thread-count="5" name="SWG_22(failed)">
+    <parameter name="caseID" value="SWG_22"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_22(failed) -->
+  <test thread-count="5" name="SWG_23(failed)">
+    <parameter name="caseID" value="SWG_23"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_23(failed) -->
+  <test thread-count="5" name="SWG_24(failed)">
+    <parameter name="caseID" value="SWG_24"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_24(failed) -->
+  <test thread-count="5" name="SWG_25(failed)">
+    <parameter name="caseID" value="SWG_25"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_25(failed) -->
+  <test thread-count="5" name="SWG_26(failed)">
+    <parameter name="caseID" value="SWG_26"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_26(failed) -->
+  <test thread-count="5" name="SWG_27(failed)">
+    <parameter name="caseID" value="SWG_27"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_27(failed) -->
+  <test thread-count="5" name="SWG_28(failed)">
+    <parameter name="caseID" value="SWG_28"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_28(failed) -->
+  <test thread-count="5" name="SWG_29(failed)">
+    <parameter name="caseID" value="SWG_29"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_29(failed) -->
+  <test thread-count="5" name="SWG_30(failed)">
+    <parameter name="caseID" value="SWG_30"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_30(failed) -->
+  <test thread-count="5" name="SWG_31(failed)">
+    <parameter name="caseID" value="SWG_31"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_31(failed) -->
+  <test thread-count="5" name="SWG_32(failed)">
+    <parameter name="caseID" value="SWG_32"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_32(failed) -->
+  <test thread-count="5" name="SWG_33(failed)">
+    <parameter name="caseID" value="SWG_33"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_33(failed) -->
+  <test thread-count="5" name="SWG_34(failed)">
+    <parameter name="caseID" value="SWG_34"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_34(failed) -->
+  <test thread-count="5" name="SWG_35(failed)">
+    <parameter name="caseID" value="SWG_35"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_35(failed) -->
+  <test thread-count="5" name="SWG_36(failed)">
+    <parameter name="caseID" value="SWG_36"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_36(failed) -->
+  <test thread-count="5" name="SWG_37(failed)">
+    <parameter name="caseID" value="SWG_37"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_37(failed) -->
+  <test thread-count="5" name="SWG_38(failed)">
+    <parameter name="caseID" value="SWG_38"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_38(failed) -->
+  <test thread-count="5" name="SWG_39(failed)">
+    <parameter name="caseID" value="SWG_39"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_39(failed) -->
+  <test thread-count="5" name="SWG_40(failed)">
+    <parameter name="caseID" value="SWG_40"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods">
+        <methods>
+          <include name="runApi"/>
+        </methods>
+      </class> <!-- com.ep.app.tests.APIMethods -->
+    </classes>
+  </test> <!-- SWG_40(failed) -->
+</suite> <!-- Failed suite [SwaggerSuite] -->

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="SwaggerSuite" parallel="false">
+  <test name="SWG_1">
+    <parameter name="caseID" value="SWG_1"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_2">
+    <parameter name="caseID" value="SWG_2"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_3">
+    <parameter name="caseID" value="SWG_3"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_4">
+    <parameter name="caseID" value="SWG_4"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_5">
+    <parameter name="caseID" value="SWG_5"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_6">
+    <parameter name="caseID" value="SWG_6"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_7">
+    <parameter name="caseID" value="SWG_7"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_8">
+    <parameter name="caseID" value="SWG_8"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_9">
+    <parameter name="caseID" value="SWG_9"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_10">
+    <parameter name="caseID" value="SWG_10"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_11">
+    <parameter name="caseID" value="SWG_11"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_12">
+    <parameter name="caseID" value="SWG_12"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_13">
+    <parameter name="caseID" value="SWG_13"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_14">
+    <parameter name="caseID" value="SWG_14"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_15">
+    <parameter name="caseID" value="SWG_15"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_16">
+    <parameter name="caseID" value="SWG_16"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_17">
+    <parameter name="caseID" value="SWG_17"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_18">
+    <parameter name="caseID" value="SWG_18"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_19">
+    <parameter name="caseID" value="SWG_19"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_20">
+    <parameter name="caseID" value="SWG_20"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_21">
+    <parameter name="caseID" value="SWG_21"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_22">
+    <parameter name="caseID" value="SWG_22"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_23">
+    <parameter name="caseID" value="SWG_23"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_24">
+    <parameter name="caseID" value="SWG_24"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_25">
+    <parameter name="caseID" value="SWG_25"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_26">
+    <parameter name="caseID" value="SWG_26"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_27">
+    <parameter name="caseID" value="SWG_27"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_28">
+    <parameter name="caseID" value="SWG_28"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_29">
+    <parameter name="caseID" value="SWG_29"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_30">
+    <parameter name="caseID" value="SWG_30"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_31">
+    <parameter name="caseID" value="SWG_31"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_32">
+    <parameter name="caseID" value="SWG_32"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_33">
+    <parameter name="caseID" value="SWG_33"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_34">
+    <parameter name="caseID" value="SWG_34"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_35">
+    <parameter name="caseID" value="SWG_35"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_36">
+    <parameter name="caseID" value="SWG_36"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_37">
+    <parameter name="caseID" value="SWG_37"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_38">
+    <parameter name="caseID" value="SWG_38"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_39">
+    <parameter name="caseID" value="SWG_39"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+  <test name="SWG_40">
+    <parameter name="caseID" value="SWG_40"/>
+    <classes>
+      <class name="com.ep.app.tests.APIMethods"/>
+    </classes>
+  </test>
+</suite>

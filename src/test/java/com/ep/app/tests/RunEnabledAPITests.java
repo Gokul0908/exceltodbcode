@@ -1,48 +1,85 @@
 package com.ep.app.tests;
 
+import java.sql.Connection;
 import java.util.List;
 
 import org.testng.TestNG;
 import org.testng.annotations.Test;
 
-import com.ep.app.utils.ConfigReader;
+import swagger.SwaggerRunner;
 
 public class RunEnabledAPITests {
 
 	@Test
-	public static void runEnabledTests() {
+	public void runEnabledTests() {
 
-		String fileName = ConfigReader.getConfigValue("excelFile");
-		String excelPath = Common.getExcelFilePath(fileName);
+		// 1️⃣ Detect Swagger mode
+		String swaggerExcel = SwaggerRunner.prepareSwaggerExcelIfNeeded();
+		boolean isSwaggerMode = swaggerExcel != null;
 
-		// 1. Get caseIDs for individual API operations
-		List<String> getCases = Common.getAllTestCaseIDs(excelPath, "apiGET", "caseID", "isRun");
-		List<String> postCases = Common.getAllTestCaseIDs(excelPath, "apiPOST", "caseID", "isRun");
-		List<String> putCases = Common.getAllTestCaseIDs(excelPath, "apiPUT", "caseID", "isRun");
-		List<String> deleteCases = Common.getAllTestCaseIDs(excelPath, "apiDELETE", "caseID", "isRun");
-
-		// 2. Generate XML and run for api tests
-		Common.generateTestNGXmlFile(getCases, postCases, putCases, deleteCases);
-		runTestNGSuite("src/test/resources/testng-api.xml");
-
-		// 3. Get chain case IDs (grouped)
-		List<String> chainingGroupIDs = Common.getUniqueChainingGroupIDs(excelPath, "chainingRequests", "caseID",
-				"isRun");
-
-		// Run chaining tests only if chaining cases exist
-		if (chainingGroupIDs != null && !chainingGroupIDs.isEmpty()) {
-			Common.generateChainingXML(chainingGroupIDs, "src/test/resources/testng-chaining.xml");
-			runTestNGSuite("src/test/resources/testng-chaining.xml");
+		// 2️⃣ Decide Excel path
+		String excelPath;
+		if (isSwaggerMode) {
+			excelPath = swaggerExcel;
+			System.out.println("Running in SWAGGER mode");
 		} else {
-			System.out.println(" ---> No chaining test cases enabled. Skipping chaining suite <-----");
+			excelPath = "src/test/resources/testData/APIData.xlsx";
+			System.out.println("Running in EXCEL mode");
+		}
+
+		System.setProperty("EXCEL_PATH", excelPath);
+
+		// 3️⃣ Run tests
+		if (isSwaggerMode) {
+
+			// ✅ Swagger → ONLY SwaggerAPIs sheet
+			List<String> cases = Common.getAllTestCaseIDs(excelPath, "SwaggerAPIs", "caseID", "isRun");
+
+			Common.generateSwaggerTestNGXml(cases);
+			runSuite("src/test/resources/testng-swagger.xml");
+
+		} else {
+
+			String dataSource = "Excel";
+			System.out.println("📌 DATA SOURCE = " + dataSource);
+
+			if ("DB".equalsIgnoreCase(dataSource)) {
+
+				// ===== DB MODE =====
+				System.setProperty("DB_MODE", "false");
+
+				System.out.println("📊 Running DB → Code");
+
+				List<String> getCases = Common.getAllTestCaseIDsFromDB("GET");
+				List<String> postCases = Common.getAllTestCaseIDsFromDB("POST");
+				List<String> putCases = Common.getAllTestCaseIDsFromDB("PUT");
+				List<String> deleteCases = Common.getAllTestCaseIDsFromDB("DELETE");
+
+				TestNGXmlGenerator.generateTestNGXml(getCases, postCases, putCases, deleteCases);
+
+			} else {
+
+//				// ===== EXCEL MODE (OLD FLOW – UNTOUCHED) =====
+				System.setProperty("DB_MODE", "false");
+
+				System.out.println("📘 Running EXCEL → Code");
+
+				List<String> getCases = Common.getAllTestCaseIDs(excelPath, "apiGET", "caseID", "isRun");
+				List<String> postCases = Common.getAllTestCaseIDs(excelPath, "apiPOST", "caseID", "isRun");
+				List<String> putCases = Common.getAllTestCaseIDs(excelPath, "apiPUT", "caseID", "isRun");
+				List<String> deleteCases = Common.getAllTestCaseIDs(excelPath, "apiDELETE", "caseID", "isRun");
+
+				Common.generateTestNGXmlFile(getCases, postCases, putCases, deleteCases);
+			}
+
+			runSuite("src/test/resources/testng-api.xml");
 		}
 
 	}
 
-	private static void runTestNGSuite(String xmlFilePath) {
+	private void runSuite(String xmlPath) {
 		TestNG testng = new TestNG();
-		testng.setTestSuites(List.of(xmlFilePath));
+		testng.setTestSuites(List.of(xmlPath));
 		testng.run();
 	}
-
 }

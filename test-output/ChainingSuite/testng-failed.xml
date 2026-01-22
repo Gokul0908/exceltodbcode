@@ -4,8 +4,8 @@
   <listeners>
     <listener class-name="com.ep.app.utils.TestListener"/>
   </listeners>
-  <test thread-count="5" name="Chaining_TC008.3(failed)">
-    <parameter name="chainCaseID" value="TC008.3"/>
+  <test thread-count="5" name="Chaining_TC003(failed)">
+    <parameter name="chainCaseID" value="TC003"/>
     <classes>
       <class name="com.ep.app.tests.ChainingTest">
         <methods>
@@ -13,5 +13,5 @@
         </methods>
       </class> <!-- com.ep.app.tests.ChainingTest -->
     </classes>
-  </test> <!-- Chaining_TC008.3(failed) -->
+  </test> <!-- Chaining_TC003(failed) -->
 </suite> <!-- Failed suite [ChainingSuite] -->

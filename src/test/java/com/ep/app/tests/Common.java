@@ -6,20 +6,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.net.ssl.SSLContext;
+
 import org.apache.commons.io.FileUtils;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContexts;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -63,13 +60,43 @@ public class Common {
 
 	}
 
+	public static List<String> getAllTestCaseIDsFromDB(String action) {
+		List<String> caseIDs = new ArrayList<>();
+
+		String sql = "SELECT caseID FROM api WHERE isRun='Yes' AND action=?";
+
+		try (Connection con = DBConnectionManager.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+			ps.setString(1, action);
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				caseIDs.add(rs.getString("caseID"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return caseIDs;
+	}
+
 	public Map<String, String> getTestData(String caseID, String sheet) {
-		String excelPath = System.getProperty("user.dir") + "/src/test/resources/testData/APIData.xlsx";
-		String dateFormat = "dd-MM-yyyy";
-		Map<String, String> data = excelActions.extractExcelDataAsMap(excelPath, sheet, caseID, dateFormat);
+
+		boolean dbMode = Boolean.parseBoolean(System.getProperty("DB_MODE", "false"));
+
+		Map<String, String> data;
+
+		if (dbMode) {
+			System.out.println("📦 Reading test data from DB for caseID: " + caseID);
+			data = DBDataProvider.getTestDataFromDB(caseID);
+		} else {
+			System.out.println("📘 Reading test data from Excel for caseID: " + caseID);
+			String excelPath = System.getProperty("user.dir") + "/src/test/resources/testData/APIData.xlsx";
+			String dateFormat = "dd-MM-yyyy";
+			data = excelActions.extractExcelDataAsMap(excelPath, sheet, caseID, dateFormat);
+		}
 
 		if (data == null || data.isEmpty()) {
-			throw new SkipException("No test data found for caseID: " + caseID + " in sheet: " + sheet);
+			throw new SkipException("No test data found for caseID: " + caseID);
 		}
 
 		return data;
@@ -826,10 +853,10 @@ public class Common {
 			writer.write("  </listeners>\n");
 
 // Generate <test> blocks per case
-			writeTestBlocks(writer, "testGETRequest", getCases);
-			writeTestBlocks(writer, "testPOSTRequest", postCases);
-			writeTestBlocks(writer, "testPUTRequest", putCases);
-			writeTestBlocks(writer, "testDELETERequest", deleteCases);
+			writeTestBlocks(writer, getCases);
+			writeTestBlocks(writer, postCases);
+			writeTestBlocks(writer, putCases);
+			writeTestBlocks(writer, deleteCases);
 
 			writer.write("</suite>\n");
 
@@ -839,17 +866,13 @@ public class Common {
 		}
 	}
 
-	private static void writeTestBlocks(BufferedWriter writer, String methodName, List<String> caseIds)
-			throws IOException {
+	private static void writeTestBlocks(BufferedWriter writer, List<String> caseIds) throws IOException {
+
 		for (String caseID : caseIds) {
-			writer.write("  <test name=\"" + methodName + "_" + caseID + "\">\n");
+			writer.write("  <test name=\"API_" + caseID + "\">\n");
 			writer.write("    <parameter name=\"caseID\" value=\"" + caseID + "\"/>\n");
 			writer.write("    <classes>\n");
-			writer.write("      <class name=\"com.ep.app.tests.APIMethods\">\n");
-			writer.write("        <methods>\n");
-			writer.write("          <include name=\"" + methodName + "\"/>\n");
-			writer.write("        </methods>\n");
-			writer.write("      </class>\n");
+			writer.write("      <class name=\"com.ep.app.tests.APIMethods\"/>\n");
 			writer.write("    </classes>\n");
 			writer.write("  </test>\n");
 		}
@@ -1043,6 +1066,43 @@ public class Common {
 		}
 
 		dataContext.setUpdatedEndpoint(endpoint);
+	}
+
+	public static void generateSwaggerTestNGXml(List<String> caseIDs) {
+
+		try {
+			String xmlPath = "src/test/resources/testng-swagger.xml";
+
+			StringBuilder xml = new StringBuilder();
+
+			xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+			xml.append("<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">\n");
+			xml.append("<suite name=\"SwaggerSuite\" parallel=\"false\">\n");
+
+			for (String caseID : caseIDs) {
+
+				xml.append("  <test name=\"").append(caseID).append("\">\n");
+				xml.append("    <parameter name=\"caseID\" value=\"").append(caseID).append("\"/>\n");
+				xml.append("    <classes>\n");
+				xml.append("      <class name=\"com.ep.app.tests.APIMethods\"/>\n");
+				xml.append("    </classes>\n");
+				xml.append("  </test>\n");
+			}
+
+			xml.append("</suite>");
+
+			File file = new File(xmlPath);
+			file.getParentFile().mkdirs();
+
+			try (FileWriter writer = new FileWriter(file)) {
+				writer.write(xml.toString());
+			}
+
+			System.out.println("Swagger TestNG XML generated: " + xmlPath);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to generate Swagger TestNG XML", e);
+		}
 	}
 
 }
