@@ -2,12 +2,12 @@
 <testng-results ignored="0" total="1" passed="1" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2026-01-22T11:56:49 IST" name="Default suite" finished-at="2026-01-22T11:57:01 IST" duration-ms="11330">
+  <suite started-at="2026-01-23T11:40:58 IST" name="Default suite" finished-at="2026-01-23T11:41:18 IST" duration-ms="20228">
     <groups>
     </groups>
-    <test started-at="2026-01-22T11:56:49 IST" name="Default test" finished-at="2026-01-22T11:57:01 IST" duration-ms="11330">
+    <test started-at="2026-01-23T11:40:58 IST" name="Default test" finished-at="2026-01-23T11:41:18 IST" duration-ms="20228">
       <class name="com.ep.app.tests.RunEnabledAPITests">
-        <test-method signature="runEnabledTests()[pri:0, instance:com.ep.app.tests.RunEnabledAPITests@7dcf94f8]" started-at="2026-01-22T11:56:49 IST" name="runEnabledTests" finished-at="2026-01-22T11:57:01 IST" duration-ms="11251" status="PASS">
+        <test-method signature="runEnabledTests()[pri:0, instance:com.ep.app.tests.RunEnabledAPITests@6743e411]" started-at="2026-01-23T11:40:58 IST" name="runEnabledTests" finished-at="2026-01-23T11:41:18 IST" duration-ms="20187" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- runEnabledTests -->

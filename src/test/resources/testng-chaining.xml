@@ -3,8 +3,44 @@
   <listeners>
     <listener class-name="com.ep.app.utils.TestListener"/>
   </listeners>
+  <test name="Chaining_TC001">
+    <parameter name="chainCaseID" value="TC001"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
+  <test name="Chaining_TC002">
+    <parameter name="chainCaseID" value="TC002"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
   <test name="Chaining_TC003">
     <parameter name="chainCaseID" value="TC003"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
+  <test name="Chaining_TC004">
+    <parameter name="chainCaseID" value="TC004"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
+  <test name="Chaining_TC005">
+    <parameter name="chainCaseID" value="TC005"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
+  <test name="Chaining_TC006">
+    <parameter name="chainCaseID" value="TC006"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
+  <test name="Chaining_TC007">
+    <parameter name="chainCaseID" value="TC007"/>
     <classes>
       <class name="com.ep.app.tests.ChainingTest"/>
     </classes>

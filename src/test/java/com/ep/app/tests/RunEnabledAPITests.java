@@ -1,85 +1,62 @@
 package com.ep.app.tests;
 
-import java.sql.Connection;
 import java.util.List;
-
+import java.util.Scanner;
 import org.testng.TestNG;
 import org.testng.annotations.Test;
-
-import swagger.SwaggerRunner;
+import com.ep.app.tests.util.DBSchemaInitializer;
+import com.ep.app.utils.ConfigReader;
 
 public class RunEnabledAPITests {
 
 	@Test
-	public void runEnabledTests() {
+	public static void runEnabledTests() {
 
-		// 1️⃣ Detect Swagger mode
-		String swaggerExcel = SwaggerRunner.prepareSwaggerExcelIfNeeded();
-		boolean isSwaggerMode = swaggerExcel != null;
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Choose execution mode:");
+		System.out.println("1 - Run directly from Excel");
+		System.out.println("2 - Excel -> DB -> Run");
+		int option = sc.nextInt();
 
-		// 2️⃣ Decide Excel path
-		String excelPath;
-		if (isSwaggerMode) {
-			excelPath = swaggerExcel;
-			System.out.println("Running in SWAGGER mode");
-		} else {
-			excelPath = "src/test/resources/testData/APIData.xlsx";
-			System.out.println("Running in EXCEL mode");
+		String fileName = ConfigReader.getConfigValue("excelFile");
+		String excelPath = Common.getExcelFilePath(fileName);
+
+		boolean runFromDB = false;
+
+		if (option == 2) {
+			DBSchemaInitializer.createTableIfNotExists();
+			Common.copyExcelDataToDB(excelPath);
+			runFromDB = true; // 🔥 REQUIRED
 		}
 
-		System.setProperty("EXCEL_PATH", excelPath);
+		// 1. Get caseIDs for individual API operations
+		List<String> getCases = Common.getAllTestCaseIDs(excelPath, "apiGET", "caseID", "isRun", runFromDB);
 
-		// 3️⃣ Run tests
-		if (isSwaggerMode) {
+		List<String> postCases = Common.getAllTestCaseIDs(excelPath, "apiPOST", "caseID", "isRun", runFromDB);
 
-			// ✅ Swagger → ONLY SwaggerAPIs sheet
-			List<String> cases = Common.getAllTestCaseIDs(excelPath, "SwaggerAPIs", "caseID", "isRun");
+		List<String> putCases = Common.getAllTestCaseIDs(excelPath, "apiPUT", "caseID", "isRun", runFromDB);
 
-			Common.generateSwaggerTestNGXml(cases);
-			runSuite("src/test/resources/testng-swagger.xml");
+		List<String> deleteCases = Common.getAllTestCaseIDs(excelPath, "apiDELETE", "caseID", "isRun", runFromDB);
 
+		// 2. Generate XML and run for api tests
+		Common.generateTestNGXmlFile(getCases, postCases, putCases, deleteCases);
+		runTestNGSuite("src/test/resources/testng-api.xml");
+
+		// 3. Chaining (Excel or DB)
+		List<String> chainingGroupIDs = Common.getUniqueChainingGroupIDs(excelPath, "chainingRequests", "caseID",
+				"isRun", runFromDB);
+
+		if (chainingGroupIDs != null && !chainingGroupIDs.isEmpty()) {
+			Common.generateChainingXML(chainingGroupIDs, "src/test/resources/testng-chaining.xml");
+			runTestNGSuite("src/test/resources/testng-chaining.xml");
 		} else {
-
-			String dataSource = "Excel";
-			System.out.println("📌 DATA SOURCE = " + dataSource);
-
-			if ("DB".equalsIgnoreCase(dataSource)) {
-
-				// ===== DB MODE =====
-				System.setProperty("DB_MODE", "false");
-
-				System.out.println("📊 Running DB → Code");
-
-				List<String> getCases = Common.getAllTestCaseIDsFromDB("GET");
-				List<String> postCases = Common.getAllTestCaseIDsFromDB("POST");
-				List<String> putCases = Common.getAllTestCaseIDsFromDB("PUT");
-				List<String> deleteCases = Common.getAllTestCaseIDsFromDB("DELETE");
-
-				TestNGXmlGenerator.generateTestNGXml(getCases, postCases, putCases, deleteCases);
-
-			} else {
-
-//				// ===== EXCEL MODE (OLD FLOW – UNTOUCHED) =====
-				System.setProperty("DB_MODE", "false");
-
-				System.out.println("📘 Running EXCEL → Code");
-
-				List<String> getCases = Common.getAllTestCaseIDs(excelPath, "apiGET", "caseID", "isRun");
-				List<String> postCases = Common.getAllTestCaseIDs(excelPath, "apiPOST", "caseID", "isRun");
-				List<String> putCases = Common.getAllTestCaseIDs(excelPath, "apiPUT", "caseID", "isRun");
-				List<String> deleteCases = Common.getAllTestCaseIDs(excelPath, "apiDELETE", "caseID", "isRun");
-
-				Common.generateTestNGXmlFile(getCases, postCases, putCases, deleteCases);
-			}
-
-			runSuite("src/test/resources/testng-api.xml");
+			System.out.println(" ---> No chaining test cases enabled. Skipping chaining suite <-----");
 		}
-
 	}
 
-	private void runSuite(String xmlPath) {
+	private static void runTestNGSuite(String xmlFilePath) {
 		TestNG testng = new TestNG();
-		testng.setTestSuites(List.of(xmlPath));
+		testng.setTestSuites(List.of(xmlFilePath));
 		testng.run();
 	}
 }
