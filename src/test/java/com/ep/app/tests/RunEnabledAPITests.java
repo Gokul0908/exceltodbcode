@@ -13,9 +13,9 @@ public class RunEnabledAPITests {
 	public static void runEnabledTests() {
 
 		Scanner sc = new Scanner(System.in);
-		System.out.println("Choose execution mode:");
+		System.out.println("Choose your execution mode:");
 		System.out.println("1 - Run directly from Excel");
-		System.out.println("2 - Excel -> DB -> Run");
+		System.out.println("2 - Excel --> DB --> Run");
 		int option = sc.nextInt();
 
 		String fileName = ConfigReader.getConfigValue("excelFile");
@@ -26,7 +26,7 @@ public class RunEnabledAPITests {
 		if (option == 2) {
 			DBSchemaInitializer.createTableIfNotExists();
 			Common.copyExcelDataToDB(excelPath);
-			runFromDB = true; // 🔥 REQUIRED
+			runFromDB = true;
 		}
 
 		// 1. Get caseIDs for individual API operations

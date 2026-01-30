@@ -4,36 +4,6 @@
   <listeners>
     <listener class-name="com.ep.app.utils.TestListener"/>
   </listeners>
-  <test thread-count="5" name="testGETRequest_apiGET_TC002(failed)">
-    <parameter name="caseID" value="TC002"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testGETRequest" invocation-numbers="0"/>
-        </methods>
-      </class> <!-- com.ep.app.tests.APIMethods -->
-    </classes>
-  </test> <!-- testGETRequest_apiGET_TC002(failed) -->
-  <test thread-count="5" name="testGETRequest_apiGET_TC003(failed)">
-    <parameter name="caseID" value="TC003"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testGETRequest" invocation-numbers="0"/>
-        </methods>
-      </class> <!-- com.ep.app.tests.APIMethods -->
-    </classes>
-  </test> <!-- testGETRequest_apiGET_TC003(failed) -->
-  <test thread-count="5" name="testGETRequest_apiGET_TC008(failed)">
-    <parameter name="caseID" value="TC008"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testGETRequest" invocation-numbers="0"/>
-        </methods>
-      </class> <!-- com.ep.app.tests.APIMethods -->
-    </classes>
-  </test> <!-- testGETRequest_apiGET_TC008(failed) -->
   <test thread-count="5" name="testPOSTRequest_apiPOST_TC002(failed)">
     <parameter name="caseID" value="TC002"/>
     <classes>
@@ -44,24 +14,4 @@
       </class> <!-- com.ep.app.tests.APIMethods -->
     </classes>
   </test> <!-- testPOSTRequest_apiPOST_TC002(failed) -->
-  <test thread-count="5" name="testPOSTRequest_apiPOST_TC003(failed)">
-    <parameter name="caseID" value="TC003"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testPOSTRequest" invocation-numbers="0"/>
-        </methods>
-      </class> <!-- com.ep.app.tests.APIMethods -->
-    </classes>
-  </test> <!-- testPOSTRequest_apiPOST_TC003(failed) -->
-  <test thread-count="5" name="testPOSTRequest_apiPOST_TC004(failed)">
-    <parameter name="caseID" value="TC004"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testPOSTRequest" invocation-numbers="0"/>
-        </methods>
-      </class> <!-- com.ep.app.tests.APIMethods -->
-    </classes>
-  </test> <!-- testPOSTRequest_apiPOST_TC004(failed) -->
 </suite> <!-- Failed suite [DynamicSuite] -->

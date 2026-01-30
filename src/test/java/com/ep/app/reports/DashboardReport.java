@@ -553,8 +553,7 @@ public class DashboardReport implements IReporter {
 					+ "}\r\n" + "\r\n" + "@keyframes slideWatermark {\r\n"
 					+ "    0%   { transform: translateX(-50%) translateY(-50%); }\r\n"
 					+ "    50%  { transform: translateX(50%) translateY(-50%); }\r\n"
-					+ "    100% { transform: translateX(-50%) translateY(-50%); }\r\n" + "}\r\n" + "" + "" // 🌀
-																											// Animation
+					+ "    100% { transform: translateX(-50%) translateY(-50%); }\r\n" + "}\r\n" + "" + "" // Animation
 																											// Speed
 																											// change
 																											// here

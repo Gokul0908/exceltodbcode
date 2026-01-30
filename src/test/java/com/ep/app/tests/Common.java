@@ -226,7 +226,7 @@ public class Common {
 				&& endpoint.contains("{id}")
 				&& (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty())) {
 
-			System.out.println("⚠ No POST id → Fetching latest user ID...");
+			System.out.println(" No POST id --> Fetching latest user ID...");
 
 			Response tempResponse = RestAssured.given().baseUri("https://gorest.co.in")
 					.header("Authorization", "Bearer " + data.get("generatedToken")).get("/public/v2/users");
@@ -234,7 +234,7 @@ public class Common {
 			String latestId = tempResponse.jsonPath().getString("[0].id");
 			dataContext.setLastCreatedId(latestId);
 
-			System.out.println("✔ Latest ID fetched: " + latestId);
+			System.out.println("Latest ID fetched: " + latestId);
 
 			endpoint = endpoint.replace("{id}", latestId);
 		}
@@ -1092,6 +1092,7 @@ public class Common {
 	}
 
 	public static void copyExcelDataToDB(String excelPath) {
+		int runId = DBUtil.getNewRunId(); // one run = one run_id
 
 		try (Workbook workbook = WorkbookFactory.create(new FileInputStream(excelPath))) {
 
@@ -1103,6 +1104,7 @@ public class Common {
 				Sheet sheet = workbook.getSheetAt(s);
 				String sheetName = sheet.getSheetName();
 
+				int runLineNo = 1; // ✅ RESET PER SHEET
 				Row header = sheet.getRow(0);
 
 				int caseIdIdx = requireColumn(header, "caseID", sheetName);
@@ -1129,7 +1131,8 @@ public class Common {
 					if (!"YES".equalsIgnoreCase(isRun))
 						continue;
 
-					DBUtil.insertApiData(sheetName, getCellValue(row.getCell(caseIdIdx)), isRun,
+					DBUtil.insertApiData(runId, runLineNo++, // ✅ auto-increment
+							sheetName, getCellValue(row.getCell(caseIdIdx)), isRun,
 							getCellValue(row.getCell(baseURLIdx)), getCellValue(row.getCell(endPointIdx)),
 							getCellValue(row.getCell(basicAuthIdx)), getCellValue(row.getCell(apiKeyIdx)),
 							getCellValue(row.getCell(authTypeIdx)), getCellValue(row.getCell(tokenIdx)),

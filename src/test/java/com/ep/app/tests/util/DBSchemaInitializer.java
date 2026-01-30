@@ -3,6 +3,7 @@ package com.ep.app.tests.util;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import static com.ep.app.tests.util.DBConstants.*;
 
 public class DBSchemaInitializer {
 
@@ -13,8 +14,10 @@ public class DBSchemaInitializer {
 		String pass = "Database@123";
 
 		String sql = """
-				    CREATE TABLE IF NOT EXISTS api_data (
+				    CREATE TABLE IF NOT EXISTS %s (
 				        id INT AUTO_INCREMENT PRIMARY KEY,
+				        run_id INT,
+				        run_line_no VARCHAR(100),
 
 				        sheet_name VARCHAR(100),
 				        case_id VARCHAR(100),
@@ -36,12 +39,12 @@ public class DBSchemaInitializer {
 
 				        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 				    )
-				""";
+				""".formatted(TABLE_NAME);
 
 		try (Connection con = DriverManager.getConnection(url, user, pass); Statement stmt = con.createStatement()) {
 
 			stmt.execute(sql);
-			System.out.println("DB table verified / created");
+			System.out.println("DB table verified / created -----> " + TABLE_NAME);
 
 		} catch (Exception e) {
 			throw new RuntimeException("DB schema creation failed", e);

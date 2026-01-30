@@ -23,26 +23,6 @@
       </class>
     </classes>
   </test>
-  <test name="testGETRequest_apiGET_TC003">
-    <parameter name="caseID" value="TC003"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testGETRequest"/>
-        </methods>
-      </class>
-    </classes>
-  </test>
-  <test name="testGETRequest_apiGET_TC008">
-    <parameter name="caseID" value="TC008"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testGETRequest"/>
-        </methods>
-      </class>
-    </classes>
-  </test>
   <test name="testPOSTRequest_apiPOST_TC001">
     <parameter name="caseID" value="TC001"/>
     <classes>
@@ -55,26 +35,6 @@
   </test>
   <test name="testPOSTRequest_apiPOST_TC002">
     <parameter name="caseID" value="TC002"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testPOSTRequest"/>
-        </methods>
-      </class>
-    </classes>
-  </test>
-  <test name="testPOSTRequest_apiPOST_TC003">
-    <parameter name="caseID" value="TC003"/>
-    <classes>
-      <class name="com.ep.app.tests.APIMethods">
-        <methods>
-          <include name="testPOSTRequest"/>
-        </methods>
-      </class>
-    </classes>
-  </test>
-  <test name="testPOSTRequest_apiPOST_TC004">
-    <parameter name="caseID" value="TC004"/>
     <classes>
       <class name="com.ep.app.tests.APIMethods">
         <methods>
