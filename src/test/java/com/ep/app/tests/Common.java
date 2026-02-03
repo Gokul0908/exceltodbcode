@@ -30,6 +30,8 @@ import org.testng.SkipException;
 import com.changepond.test.framework.actions.APIActions;
 import com.changepond.test.framework.actions.ExcelActions;
 import com.ep.app.dto.DataContext;
+import com.ep.app.tests.util.DBReader;
+import com.ep.app.tests.util.DBUtil;
 import com.ep.app.utils.ReportUtil.ReportUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -73,7 +75,7 @@ public class Common {
 		Map<String, String> data = getTestData(caseID, sheet);
 
 		if (!"Yes".equalsIgnoreCase(data.get("isRun"))) {
-			System.out.println("⏭ Skipping test | isRun = No | caseID = " + caseID);
+			System.out.println("Skipping test | isRun = No | caseID = " + caseID);
 			return false;
 		}
 		return true;
@@ -325,12 +327,12 @@ public class Common {
 
 		// 🔥 FIX: Skip validation if response body is empty
 		if (responseBody == null || responseBody.trim().isEmpty()) {
-			System.out.println("⚠ Empty response body — Skipping response validation");
+			System.out.println("Empty response body — Skipping response validation");
 			return;
 		}
 		// 🔥 SKIP VALIDATION for Single GET when no POST id exists
 		if (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty()) {
-			System.out.println("⚠ Single GET detected — Skipping id/email validation");
+			System.out.println("Single GET detected — Skipping id/email validation");
 			return;
 		}
 //		validateResponseParams(caseID, sheet);
@@ -1104,7 +1106,7 @@ public class Common {
 				Sheet sheet = workbook.getSheetAt(s);
 				String sheetName = sheet.getSheetName();
 
-				int runLineNo = 1; // ✅ RESET PER SHEET
+				int runLineNo = 1; // RESET PER SHEET
 				Row header = sheet.getRow(0);
 
 				int caseIdIdx = requireColumn(header, "caseID", sheetName);
@@ -1131,7 +1133,7 @@ public class Common {
 					if (!"YES".equalsIgnoreCase(isRun))
 						continue;
 
-					DBUtil.insertApiData(runId, runLineNo++, // ✅ auto-increment
+					DBUtil.insertApiData(runId, runLineNo++, //  auto-increment
 							sheetName, getCellValue(row.getCell(caseIdIdx)), isRun,
 							getCellValue(row.getCell(baseURLIdx)), getCellValue(row.getCell(endPointIdx)),
 							getCellValue(row.getCell(basicAuthIdx)), getCellValue(row.getCell(apiKeyIdx)),
@@ -1159,6 +1161,7 @@ public class Common {
 	}
 
 	// ================= SAFE CELL READ =================
+	@SuppressWarnings("deprecation")
 	private static String getCellValue(Cell cell) {
 		if (cell == null)
 			return "";
@@ -1177,7 +1180,7 @@ public class Common {
 			caseIds = getAllTestCaseIDs(excelPath, sheetName, caseIDCol, isRunCol);
 		}
 
-		// 🔥 CRITICAL FIX: REMOVE DUPLICATES
+		//  CRITICAL FIX: REMOVE DUPLICATES
 		return new ArrayList<>(new LinkedHashSet<>(caseIds));
 	}
 
@@ -1192,7 +1195,7 @@ public class Common {
 			groupIds = getUniqueChainingGroupIDs(excelPath, sheetName, caseIDCol, isRunCol);
 		}
 
-		// 🔥 DEDUPLICATE
+		//  DEDUPLICATE
 		return new ArrayList<>(new LinkedHashSet<>(groupIds));
 	}
 

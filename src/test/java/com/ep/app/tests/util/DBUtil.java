@@ -1,30 +1,30 @@
-package com.ep.app.tests;
+package com.ep.app.tests.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import static com.ep.app.tests.util.DBConstants.*;
 
 public class DBUtil {
 
+	// 🔹 Generate NEW run_id per execution
 	public static int getNewRunId() {
 
-		String sql = "SELECT COALESCE(MAX(run_id),0) + 1 FROM " + TABLE_NAME;
+		String sql = "SELECT COALESCE(MAX(run_id), 0) + 1 FROM " + DBConfig.TABLE_NAME;
 
-		try (Connection con = DriverManager.getConnection(URL, USER, PASS);
+		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL, DBConfig.USER, DBConfig.PASS);
 				PreparedStatement ps = con.prepareStatement(sql);
 				ResultSet rs = ps.executeQuery()) {
-
-			if (rs.next())
+			if (rs.next()) {
 				return rs.getInt(1);
-
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to generate new run_id", e);
 		}
 		return 1;
 	}
 
+	// 🔹 Insert Excel → DB
 	public static void insertApiData(int runId, int runLineNo, String sheetName, String caseId, String isRun,
 			String baseURL, String endPoint, String basicAuth, String apiKey, String authType, String generatedToken,
 			String action, String queryParam, String queryParamValue, String verificationParam,
@@ -32,14 +32,26 @@ public class DBUtil {
 
 		String sql = """
 				    INSERT INTO %s (
-				        run_id, run_line_no, sheet_name, case_id, is_run,
-				        base_url, end_point, basic_auth, api_key, auth_type,
-				        generated_token, action, query_param, query_param_value,
-				        verification_param, verification_param_value
+				        run_id,
+				        run_line_no,
+				        sheet_name,
+				        case_id,
+				        is_run,
+				        base_url,
+				        end_point,
+				        basic_auth,
+				        api_key,
+				        auth_type,
+				        generated_token,
+				        action,
+				        query_param,
+				        query_param_value,
+				        verification_param,
+				        verification_param_value
 				    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-				""".formatted(TABLE_NAME);
+				""".formatted(DBConfig.TABLE_NAME);
 
-		try (Connection con = DriverManager.getConnection(URL, USER, PASS);
+		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL, DBConfig.USER, DBConfig.PASS);
 				PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setInt(1, runId);

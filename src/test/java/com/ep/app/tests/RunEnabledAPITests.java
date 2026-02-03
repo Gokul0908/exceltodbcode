@@ -2,8 +2,10 @@ package com.ep.app.tests;
 
 import java.util.List;
 import java.util.Scanner;
+
 import org.testng.TestNG;
 import org.testng.annotations.Test;
+
 import com.ep.app.tests.util.DBSchemaInitializer;
 import com.ep.app.utils.ConfigReader;
 
@@ -24,6 +26,7 @@ public class RunEnabledAPITests {
 		boolean runFromDB = false;
 
 		if (option == 2) {
+			DBSchemaInitializer.createDatabaseIfNotExists();
 			DBSchemaInitializer.createTableIfNotExists();
 			Common.copyExcelDataToDB(excelPath);
 			runFromDB = true;

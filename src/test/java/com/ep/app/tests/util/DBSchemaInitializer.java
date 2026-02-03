@@ -3,21 +3,36 @@ package com.ep.app.tests.util;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import static com.ep.app.tests.util.DBConstants.*;
 
 public class DBSchemaInitializer {
 
-	public static void createTableIfNotExists() {
+	public static void initialize() {
+		createDatabaseIfNotExists();
+		createTableIfNotExists();
+	}
 
-		String url = "jdbc:mysql://localhost:3306/apidb";
-		String user = "root";
-		String pass = "Database@123";
+	public static void createDatabaseIfNotExists() {
+
+		String sql = "CREATE DATABASE IF NOT EXISTS " + DBConfig.DB_NAME;
+
+		try (Connection con = DriverManager.getConnection(DBConfig.ROOT_URL, DBConfig.USER, DBConfig.PASS);
+				Statement stmt = con.createStatement()) {
+
+			stmt.execute(sql);
+			System.out.println("Database verified / created ---> " + DBConfig.DB_NAME);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Database creation failed", e);
+		}
+	}
+
+	public static void createTableIfNotExists() {
 
 		String sql = """
 				    CREATE TABLE IF NOT EXISTS %s (
 				        id INT AUTO_INCREMENT PRIMARY KEY,
 				        run_id INT,
-				        run_line_no VARCHAR(100),
+				        run_line_no INT,
 
 				        sheet_name VARCHAR(100),
 				        case_id VARCHAR(100),
@@ -39,15 +54,16 @@ public class DBSchemaInitializer {
 
 				        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 				    )
-				""".formatted(TABLE_NAME);
+				""".formatted(DBConfig.TABLE_NAME);
 
-		try (Connection con = DriverManager.getConnection(url, user, pass); Statement stmt = con.createStatement()) {
+		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL,
+				DBConfig.USER, DBConfig.PASS); Statement stmt = con.createStatement()) {
 
 			stmt.execute(sql);
-			System.out.println("DB table verified / created -----> " + TABLE_NAME);
+			System.out.println("Table verified / created ---> " + DBConfig.TABLE_NAME);
 
 		} catch (Exception e) {
-			throw new RuntimeException("DB schema creation failed", e);
+			throw new RuntimeException("Table creation failed", e);
 		}
 	}
 }

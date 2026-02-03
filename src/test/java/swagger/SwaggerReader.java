@@ -10,6 +10,7 @@ public class SwaggerReader {
 
 	public static JsonObject getPaths(String swaggerUrl) {
 		try {
+			@SuppressWarnings("deprecation")
 			URL url = new URL(swaggerUrl);
 			JsonObject root = JsonParser.parseReader(new InputStreamReader(url.openStream())).getAsJsonObject();
 
