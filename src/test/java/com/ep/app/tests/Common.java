@@ -183,13 +183,13 @@ public class Common {
 			throw new RuntimeException("No 'payLoad' found in Excel for caseID: " + caseID);
 		}
 
-		// 💥 generate random
+		// generate random
 		String randomValue = Long.toHexString(System.currentTimeMillis());
 
-		// 💥 replace random in payload
+		// replace random in payload
 		payload = payload.replace("${random}", randomValue);
 
-		// 💥 AUTO-GENERATE UNIQUE EMAIL for POST requests only
+		// AUTO-GENERATE UNIQUE EMAIL for POST requests only
 		if ("POST".equalsIgnoreCase(data.get("action")) && payload.contains("\"email\"")) {
 			String randomEmail = "apiUser_" + randomValue + "@gmail.com";
 
@@ -198,7 +198,7 @@ public class Common {
 			System.out.println("🔄 Auto-generated email = " + randomEmail);
 		}
 
-		// 💥 save JSON + random value
+		// save JSON + random value
 		dataContext.setJsonBody(payload);
 		dataContext.setRandomValue(randomValue);
 
@@ -271,7 +271,7 @@ public class Common {
 			if (postId == null)
 				postId = response.jsonPath().getString("data.id");
 			dataContext.setLastCreatedId(postId);
-			System.out.println("🔥 Saved POST ID = " + postId);
+			System.out.println("Saved POST ID = " + postId);
 		}
 		case "PUT" -> {
 			long start = System.currentTimeMillis();
@@ -325,12 +325,12 @@ public class Common {
 
 		String responseBody = response.getBody().asString();
 
-		// 🔥 FIX: Skip validation if response body is empty
+		// FIX: Skip validation if response body is empty
 		if (responseBody == null || responseBody.trim().isEmpty()) {
 			System.out.println("Empty response body — Skipping response validation");
 			return;
 		}
-		// 🔥 SKIP VALIDATION for Single GET when no POST id exists
+		// SKIP VALIDATION for Single GET when no POST id exists
 		if (dataContext.getLastCreatedId() == null || dataContext.getLastCreatedId().trim().isEmpty()) {
 			System.out.println("Single GET detected — Skipping id/email validation");
 			return;
@@ -462,9 +462,9 @@ public class Common {
 				singleReportFilePath = reportFile.getAbsolutePath();
 				dataContext.setReportFilePath(singleReportFilePath);
 
-				System.out.println("📌 Report Created: " + singleReportFilePath);
+				System.out.println("Report Created: " + singleReportFilePath);
 			} else {
-				System.out.println("📎 Updating Existing Report: " + singleReportFilePath);
+				System.out.println("Updating Existing Report: " + singleReportFilePath);
 			}
 
 			FileInputStream fis = new FileInputStream(singleReportFilePath);
@@ -564,10 +564,10 @@ public class Common {
 
 			System.out.println("⏱ Response Time Saved: " + responseTime + " ms");
 			System.out.println(
-					"✅ Saved Response in: " + singleReportFilePath + " | Sheet: " + sheetName + " | Row: " + targetRow);
+					"Saved Response in: " + singleReportFilePath + " | Sheet: " + sheetName + " | Row: " + targetRow);
 
 		} catch (Exception e) {
-			System.out.println("❌ Error Updating Excel");
+			System.out.println("Error Updating Excel");
 			e.printStackTrace();
 		}
 	}
@@ -977,11 +977,11 @@ public class Common {
 							postId = response.jsonPath().getString("data.id");
 						}
 					} catch (Exception e) {
-						System.out.println("ℹ Response has no JSON id field");
+						System.out.println("Response has no JSON id field");
 					}
 
 					dataContext.setLastCreatedId(postId);
-					System.out.println("🔥 Saved POST ID = " + postId);
+					System.out.println("Saved POST ID = " + postId);
 
 				} else {
 					System.out.println("ℹ Empty response body — skipping ID extraction");
@@ -1093,22 +1093,38 @@ public class Common {
 		return -1;
 	}
 
-	public static void copyExcelDataToDB(String excelPath) {
-		int runId = DBUtil.getNewRunId(); // one run = one run_id
+	public static int copyExcelDataToDB(String excelPath) {
+
+		int totalInserted = 0;
+
+		// One execution = one run_id
+		int runId = DBUtil.getNewRunId();
+		System.out.println("--->Generated run_id = " + runId);
 
 		try (Workbook workbook = WorkbookFactory.create(new FileInputStream(excelPath))) {
 
 			int sheetCount = workbook.getNumberOfSheets();
-			System.out.println("Total sheets found: " + sheetCount);
+			System.out.println("--->Total sheets found: " + sheetCount);
 
 			for (int s = 0; s < sheetCount; s++) {
 
 				Sheet sheet = workbook.getSheetAt(s);
 				String sheetName = sheet.getSheetName();
 
-				int runLineNo = 1; // RESET PER SHEET
+				// Skip empty sheets
+				if (sheet.getLastRowNum() < 1) {
+					System.out.println("--->Skipping empty sheet: " + sheetName);
+					continue;
+				}
+
+				int runLineNo = 1; // Reset as per sheet in Excel
 				Row header = sheet.getRow(0);
 
+				if (header == null) {
+					throw new RuntimeException("--->Header row missing in sheet: " + sheetName);
+				}
+
+				// Column indexes
 				int caseIdIdx = requireColumn(header, "caseID", sheetName);
 				int isRunIdx = requireColumn(header, "isRun", sheetName);
 				int baseURLIdx = requireColumn(header, "baseURL", sheetName);
@@ -1123,6 +1139,7 @@ public class Common {
 				int verificationParamIdx = requireColumn(header, "verificationParam", sheetName);
 				int verificationParamValueIdx = requireColumn(header, "verificationParamValue", sheetName);
 
+				// Rows
 				for (int r = 1; r <= sheet.getLastRowNum(); r++) {
 
 					Row row = sheet.getRow(r);
@@ -1133,7 +1150,7 @@ public class Common {
 					if (!"YES".equalsIgnoreCase(isRun))
 						continue;
 
-					DBUtil.insertApiData(runId, runLineNo++, //  auto-increment
+					DBUtil.insertApiData(runId, runLineNo++, // auto increment per sheet
 							sheetName, getCellValue(row.getCell(caseIdIdx)), isRun,
 							getCellValue(row.getCell(baseURLIdx)), getCellValue(row.getCell(endPointIdx)),
 							getCellValue(row.getCell(basicAuthIdx)), getCellValue(row.getCell(apiKeyIdx)),
@@ -1142,12 +1159,25 @@ public class Common {
 							getCellValue(row.getCell(queryParamValueIdx)),
 							getCellValue(row.getCell(verificationParamIdx)),
 							getCellValue(row.getCell(verificationParamValueIdx)));
+
+					totalInserted++;
 				}
 			}
 
 		} catch (Exception e) {
-			throw new RuntimeException("Excel → DB upload failed", e);
+			throw new RuntimeException("--->Excel → DB upload failed", e);
 		}
+
+		// Final confirmation
+		if (totalInserted == 0) {
+			throw new RuntimeException("--->No rows inserted into DB. Check Excel isRun=YES");
+		}
+
+		System.out.println("--->Excel To DB copy SUCCESS");
+		System.out.println("--->Total rows inserted: " + totalInserted);
+		System.out.println("--->run_id used: " + runId);
+
+		return totalInserted;
 	}
 
 	// ================= COLUMN VALIDATION =================
@@ -1180,7 +1210,7 @@ public class Common {
 			caseIds = getAllTestCaseIDs(excelPath, sheetName, caseIDCol, isRunCol);
 		}
 
-		//  CRITICAL FIX: REMOVE DUPLICATES
+		// CRITICAL FIX: REMOVE DUPLICATES
 		return new ArrayList<>(new LinkedHashSet<>(caseIds));
 	}
 
@@ -1195,7 +1225,7 @@ public class Common {
 			groupIds = getUniqueChainingGroupIDs(excelPath, sheetName, caseIDCol, isRunCol);
 		}
 
-		//  DEDUPLICATE
+		// DEDUPLICATE
 		return new ArrayList<>(new LinkedHashSet<>(groupIds));
 	}
 

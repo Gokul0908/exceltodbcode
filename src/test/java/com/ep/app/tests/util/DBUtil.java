@@ -7,10 +7,9 @@ import java.sql.ResultSet;
 
 public class DBUtil {
 
-	// 🔹 Generate NEW run_id per execution
 	public static int getNewRunId() {
 
-		String sql = "SELECT COALESCE(MAX(run_id), 0) + 1 FROM " + DBConfig.TABLE_NAME;
+		String sql = "SELECT COALESCE(MAX(run_id), 0) + 1 FROM " + DBConfig.getTableName();
 
 		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL, DBConfig.USER, DBConfig.PASS);
 				PreparedStatement ps = con.prepareStatement(sql);
@@ -24,7 +23,6 @@ public class DBUtil {
 		return 1;
 	}
 
-	// 🔹 Insert Excel → DB
 	public static void insertApiData(int runId, int runLineNo, String sheetName, String caseId, String isRun,
 			String baseURL, String endPoint, String basicAuth, String apiKey, String authType, String generatedToken,
 			String action, String queryParam, String queryParamValue, String verificationParam,
@@ -49,7 +47,7 @@ public class DBUtil {
 				        verification_param,
 				        verification_param_value
 				    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-				""".formatted(DBConfig.TABLE_NAME);
+				""".formatted(DBConfig.getTableName());
 
 		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL, DBConfig.USER, DBConfig.PASS);
 				PreparedStatement ps = con.prepareStatement(sql)) {

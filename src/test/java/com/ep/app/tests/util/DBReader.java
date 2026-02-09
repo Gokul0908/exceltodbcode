@@ -18,7 +18,8 @@ public class DBReader {
 				    FROM %s
 				    WHERE sheet_name = ?
 				      AND is_run = 'YES'
-				""".formatted(DBConfig.TABLE_NAME);
+				""".formatted(DBConfig.getTableName()
+);
 
 		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL, DBConfig.USER, DBConfig.PASS);
 				PreparedStatement ps = con.prepareStatement(sql)) {
@@ -47,7 +48,8 @@ public class DBReader {
 				    FROM %s
 				    WHERE sheet_name = ?
 				      AND is_run = 'YES'
-				""".formatted(DBConfig.TABLE_NAME);
+				""".formatted(DBConfig.getTableName()
+);
 
 		try (Connection con = DriverManager.getConnection(DBConfig.DB_URL, DBConfig.USER, DBConfig.PASS);
 				PreparedStatement ps = con.prepareStatement(sql)) {

@@ -9,4 +9,16 @@
       <class name="com.ep.app.tests.ChainingTest"/>
     </classes>
   </test>
+  <test name="Chaining_TC004">
+    <parameter name="chainCaseID" value="TC004"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
+  <test name="Chaining_TC005">
+    <parameter name="chainCaseID" value="TC005"/>
+    <classes>
+      <class name="com.ep.app.tests.ChainingTest"/>
+    </classes>
+  </test>
 </suite>

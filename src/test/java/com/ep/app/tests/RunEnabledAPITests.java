@@ -12,7 +12,7 @@ import com.ep.app.utils.ConfigReader;
 public class RunEnabledAPITests {
 
 	@Test
-	public static void runEnabledTests() {
+	public void runEnabledTests() {
 
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Choose your execution mode:");
@@ -26,13 +26,11 @@ public class RunEnabledAPITests {
 		boolean runFromDB = false;
 
 		if (option == 2) {
-			DBSchemaInitializer.createDatabaseIfNotExists();
-			DBSchemaInitializer.createTableIfNotExists();
+			DBSchemaInitializer.initSchemaIfNeeded();
 			Common.copyExcelDataToDB(excelPath);
 			runFromDB = true;
 		}
 
-		// 1. Get caseIDs for individual API operations
 		List<String> getCases = Common.getAllTestCaseIDs(excelPath, "apiGET", "caseID", "isRun", runFromDB);
 
 		List<String> postCases = Common.getAllTestCaseIDs(excelPath, "apiPOST", "caseID", "isRun", runFromDB);
@@ -41,11 +39,9 @@ public class RunEnabledAPITests {
 
 		List<String> deleteCases = Common.getAllTestCaseIDs(excelPath, "apiDELETE", "caseID", "isRun", runFromDB);
 
-		// 2. Generate XML and run for api tests
 		Common.generateTestNGXmlFile(getCases, postCases, putCases, deleteCases);
 		runTestNGSuite("src/test/resources/testng-api.xml");
 
-		// 3. Chaining (Excel or DB)
 		List<String> chainingGroupIDs = Common.getUniqueChainingGroupIDs(excelPath, "chainingRequests", "caseID",
 				"isRun", runFromDB);
 
@@ -53,13 +49,14 @@ public class RunEnabledAPITests {
 			Common.generateChainingXML(chainingGroupIDs, "src/test/resources/testng-chaining.xml");
 			runTestNGSuite("src/test/resources/testng-chaining.xml");
 		} else {
-			System.out.println(" ---> No chaining test cases enabled. Skipping chaining suite <-----");
+			System.out.println("No chaining test cases enabled");
 		}
 	}
 
-	private static void runTestNGSuite(String xmlFilePath) {
+	private static boolean runTestNGSuite(String xmlFilePath) {
 		TestNG testng = new TestNG();
 		testng.setTestSuites(List.of(xmlFilePath));
 		testng.run();
+		return !testng.hasFailure();
 	}
 }
